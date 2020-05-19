@@ -1,6 +1,17 @@
 # locuste.service.brain
 LOCUSTE : Unité de contrôle principale
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/4d77818f7e8b4308b2ae76b581af6c07)](https://www.codacy.com/manual/axel.maciejewski/locuste.service.brain?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DaemonToolz/locuste.service.brain&amp;utm_campaign=Badge_Grade)
+
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=DaemonToolz_locuste.service.brain&metric=alert_status)](https://sonarcloud.io/dashboard?id=DaemonToolz_locuste.service.brain)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=DaemonToolz_locuste.service.brain&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=DaemonToolz_locuste.service.brain)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=DaemonToolz_locuste.service.brain&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=DaemonToolz_locuste.service.brain)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=DaemonToolz_locuste.service.brain&metric=security_rating)](https://sonarcloud.io/dashboard?id=DaemonToolz_locuste.service.brain)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=DaemonToolz_locuste.service.brain&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=DaemonToolz_locuste.service.brain)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=DaemonToolz_locuste.service.brain&metric=bugs)](https://sonarcloud.io/dashboard?id=DaemonToolz_locuste.service.brain)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DaemonToolz_locuste.service.brain&metric=coverage)](https://sonarcloud.io/dashboard?id=DaemonToolz_locuste.service.brain)
+
 
 Le project Locuste se divise en 3 grandes sections : 
 * Automate (Drone Automata) PYTHON
