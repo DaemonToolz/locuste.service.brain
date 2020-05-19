@@ -1,0 +1,18 @@
+{
+  "name": "rtsp-stream",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "express": "^4.17.1",
+    "rtsp-ffmpeg": "0.0.14",
+    "socketio": "^1.0.0"
+  },
+  "main": "rtsp-stream.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
