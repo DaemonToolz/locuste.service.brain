@@ -13,11 +13,11 @@ LOCUSTE : Unité de contrôle principale
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DaemonToolz_locuste.service.brain&metric=coverage)](https://sonarcloud.io/dashboard?id=DaemonToolz_locuste.service.brain)
 
 
-Le project Locuste se divise en 3 grandes sections : 
-* Automate (Drone Automata) PYTHON
-* Unité de contrôle (Brain) GOLANG
-* Unité de planification de vol / Ordonanceur (Scheduler) GOLANG
-* Interface graphique (UI) ANGULAR
+Le project Locuste se divise en 4 grandes sections : 
+* Automate (Drone Automata) PYTHON (https://github.com/DaemonToolz/locuste.drone.automata)
+* Unité de contrôle (Brain) GOLANG (https://github.com/DaemonToolz/locuste.service.brain)
+* Unité de planification de vol / Ordonanceur (Scheduler) GOLANG (https://github.com/DaemonToolz/locuste.service.osm)
+* Interface graphique (UI) ANGULAR (https://github.com/DaemonToolz/locuste.dashboard.ui)
 
 
 ![Composants](https://user-images.githubusercontent.com/6602774/82243830-8960ca80-9940-11ea-917e-15585f178c6d.png)
