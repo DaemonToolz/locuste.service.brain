@@ -1,39 +1,40 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os/exec"
-	"fmt"
 	"strings"
 )
 
-
 var rtspProcesses map[string]*exec.Cmd
 var ffmpegProcesses map[string]*exec.Cmd
+
 const (
-	nodeCommand string ="node"
-	nodeRtspPath string = "/home/pi/project/locuste/services/brain/node/rtsp-socket.js"
+	nodeCommand  string = "node"
+	nodeRtspPath string = "/home/pi/project/locuste/services/locuste.service.brain/node/rtsp-socket.js"
 
 	ffmpegCommand string = "ffmpeg -f rtsp -rtsp_transport udp -i rtsp://%s/live -f mpegts -codec:v mpeg1video  -q 2 -an -b:v 50M -threads 32 -strict experimental -bf 0 -r 25 -muxdelay 0.001 http://localhost:%d/anafi"
-)  
+)
 
-func initRtspListener(){
+func initRtspListener() {
 	rtspProcesses = make(map[string]*exec.Cmd)
 	ffmpegProcesses = make(map[string]*exec.Cmd)
 }
 
-
-func startVideoServer(name string, port int){
+func startVideoServer(name string, port int) {
 
 	renew := false
 	if process, ok := rtspProcesses[name]; ok {
 		if process == nil || process.ProcessState != nil && process.ProcessState.Exited() || process.Process == nil {
 			log.Println("Le processus JSMPEG-TS est HS pour ", name, " au port ", port, ". On redémarre")
-			renew = true;
+			renew = true
 		} else {
 			log.Println("Processus JSMPEG-TS déjà OK pour ", name, " au port ", port)
 		}
-	} else { renew = true }
+	} else {
+		renew = true
+	}
 
 	if renew {
 		log.Println("Démarrage du processus de visulation pour ", name, " au port ", port)
@@ -42,7 +43,7 @@ func startVideoServer(name string, port int){
 			failOnError(err, "Le processus JSMPEG-TS n'a pas pu démarrer")
 		}
 
-		go func(processName string) { 
+		go func(processName string) {
 			defer func() {
 				if r := recover(); r != nil {
 					AddOrUpdateExtCompStatus(processName, VideoServer, false)
@@ -58,16 +59,18 @@ func startVideoServer(name string, port int){
 
 }
 
-func startFfmpegStream(name string,port int){
+func startFfmpegStream(name string, port int) {
 	renew := false
 	if process, ok := ffmpegProcesses[name]; ok {
 		if process == nil || process.ProcessState != nil && process.ProcessState.Exited() || process.Process == nil {
 			log.Println("Le processus RTSP->FFMPEG est HS pour ", name, " au port ", port, ". On redémarre")
-			renew = true;
+			renew = true
 		} else {
 			log.Println("Processus RTSP->FFMPEG déjà OK pour ", name, " au port ", port)
 		}
-	} else { renew = true }
+	} else {
+		renew = true
+	}
 
 	if renew {
 		log.Println("Démarrage du processus de visulation pour ", name, " au port ", port)
@@ -82,7 +85,7 @@ func startFfmpegStream(name string,port int){
 			failOnError(err, "Le processus RTSP->FFMPEG n'a pas pu démarrer")
 		}
 
-		go func(processName string) { 
+		go func(processName string) {
 			defer func() {
 				if r := recover(); r != nil {
 					AddOrUpdateExtCompStatus(name, VideoStream, false)
@@ -97,12 +100,12 @@ func startFfmpegStream(name string,port int){
 	}
 }
 
-func onClose(){
-	for _, process := range rtspProcesses{
+func onClose() {
+	for _, process := range rtspProcesses {
 		process.Process.Kill()
 	}
-	for _, process := range ffmpegProcesses{
+	for _, process := range ffmpegProcesses {
 		process.Process.Kill()
 	}
-	
+
 }
