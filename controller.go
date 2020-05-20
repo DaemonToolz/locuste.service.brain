@@ -32,7 +32,7 @@ func DefineCommand(keyPressed OnTouchDown) PyDroneCommandMessage {
 	case Z:
 		axis = XAxis
 		fallthrough
-	case Q:
+	case D:
 		if axis == NoAxis {
 			axis = YAxis
 		}
@@ -52,12 +52,12 @@ func DefineCommand(keyPressed OnTouchDown) PyDroneCommandMessage {
 	case S:
 		axis = XAxis
 		fallthrough
-	case D:
+
+	case Q:
 		if axis == NoAxis {
 			axis = YAxis
 		}
 		fallthrough
-
 	case A:
 		if axis == NoAxis {
 			axis = OAxis
@@ -105,7 +105,7 @@ func DefineCommand(keyPressed OnTouchDown) PyDroneCommandMessage {
 	return finalOrder
 }
 
-/*  CreatedAutomatedCommand Créer un ordre reçu par l'autopilote
+/*  CreateAutomaticGoTo Créer un ordre reçu par l'autopilote
 
  */
 func CreateAutomaticGoTo(input *DroneFlightCoordinates) PyDroneCommandMessage {

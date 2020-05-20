@@ -40,8 +40,11 @@ func RemoveLead(channelID string) {
 func SetLeadingOperator(channelID string, drone string) bool {
 	operatorMutex.Lock()
 	defer operatorMutex.Unlock()
-	if OperatorsInCharge[channelID].IsAnonymous || OperatorsInCharge[channelID].ControlledDrone != "" { // Ce canal a le lead sur une instance
-		return false
+	if OperatorsInCharge[channelID].IsAnonymous || (OperatorsInCharge[channelID].ControlledDrone != "") { // Ce canal a le lead sur une instance
+		if OperatorsInCharge[channelID].ControlledDrone != drone {
+			return false
+		}
+		return true
 	}
 
 	for k := range OperatorsInCharge {

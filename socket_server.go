@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -76,9 +75,6 @@ func initSocketServer() {
 	})
 
 	server.On("internal_status_changed", func(c *gosocketio.Channel, data interface{}) {
-
-		fmt.Println(data)
-
 		server.BroadcastTo("operators", "internal_status_changed", data)
 	})
 
@@ -140,7 +136,6 @@ func initSocketServer() {
 				}
 				if setLeader {
 					server.BroadcastTo("operators", "operator_update", "")
-
 				}
 
 			} else {
