@@ -28,41 +28,45 @@ func initRPCClient() {
 	stopCondition = make(chan bool)
 	RPCNullArg = NullArgType{}
 	openConnection()
-	go func() {
-		for {
-			select {
-			case <-stopCondition:
-				log.Println("Connectiques RPC arrêtées")
-				AddOrUpdateStatus(SchedulerRPCServer, false)
-				return
-			case <-pulse.C:
-				if client != nil {
-					accessCall := client.Go("RPCRegistry.RequestStatuses", &RPCNullArg, &lastStatuses, nil)
-					replyCall := <-accessCall.Done
-					if client == nil {
-						log.Println("La connexion n'était pas initialisée")
-						openConnection()
-					} else if replyCall.Error == rpc.ErrShutdown || reflect.TypeOf(replyCall.Error) == reflect.TypeOf((*rpc.ServerError)(nil)).Elem() {
-						log.Println("Une erreur liée au serveur a été remonté")
-						log.Println(replyCall.Error)
-						openConnection()
-					} else {
-						FetchBoundaries() // On force la MàJ
-					}
-				} else {
-					openConnection()
-				}
+	go ping()
 
-				if lastStatuses != nil {
-					for key := range lastStatuses {
-						AddOrUpdateStatus(key, lastStatuses[key])
-					}
+	log.Println("Connectiques RPC initialisés")
+}
+
+func ping() {
+	for {
+		select {
+		case <-stopCondition:
+			log.Println("Connectiques RPC arrêtées")
+			close(stopCondition)
+			AddOrUpdateStatus(SchedulerRPCServer, false)
+			return
+		case <-pulse.C:
+			if client != nil {
+				accessCall := client.Go("RPCRegistry.RequestStatuses", &RPCNullArg, &lastStatuses, nil)
+				replyCall := <-accessCall.Done
+				if client == nil {
+					log.Println("La connexion n'était pas initialisée")
+					openConnection()
+				} else if replyCall.Error == rpc.ErrShutdown || reflect.TypeOf(replyCall.Error) == reflect.TypeOf((*rpc.ServerError)(nil)).Elem() {
+					log.Println("Une erreur liée au serveur a été remonté")
+					log.Println(replyCall.Error)
+					openConnection()
+				} else {
+					FetchBoundaries() // On force la MàJ
+				}
+			} else {
+				openConnection()
+			}
+
+			if lastStatuses != nil {
+				for key := range lastStatuses {
+					AddOrUpdateStatus(key, lastStatuses[key])
 				}
 			}
 		}
-	}()
+	}
 
-	log.Println("Connectiques RPC initialisés")
 }
 
 func openConnection() *rpc.Client {
@@ -96,7 +100,7 @@ func Unregister() {
 }
 
 // NotifyScheduler Notification de l'ordonanceur
-func NotifyScheduler(data DroneIdentifier) {
+func NotifyScheduler(data CommandIdentifier) {
 	if client != nil {
 		client.Go("RPCRegistry.OnCommandSuccess", &data, nil, nil)
 	}

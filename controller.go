@@ -109,17 +109,21 @@ func DefineCommand(keyPressed OnTouchDown) PyDroneCommandMessage {
 
  */
 func CreateAutomaticGoTo(input *DroneFlightCoordinates) PyDroneCommandMessage {
+	return PyDroneCommandMessage{
+		Name: GoTo,
+		Params: map[string]float64{
+			"latitude":  input.Component.Lat,
+			"longitude": input.Component.Lon,
+		},
+	}
+}
 
-	var finalOrder PyDroneCommandMessage = PyDroneCommandMessage{}
-
-	tempParams := make(map[string]float64) // On caste en int car la SDK Olympe ARM supported mal les flottant sur
-
-	tempParams["latitude"] = input.Component.Lat
-	tempParams["longitude"] = input.Component.Lon
-
-	finalOrder.Name = GoTo
-	finalOrder.Params = tempParams
-	return finalOrder
+/*  CreateAutomaticCommand Créer un ordre automatique sans paramètres */
+func CreateAutomaticCommand(input PyAutomaticCommand) PyDroneCommandMessage {
+	return PyDroneCommandMessage{
+		Name:   input.Name,
+		Params: nil,
+	}
 }
 
 // ExtractDroneNames Récupère les noms des drones

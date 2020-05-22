@@ -18,7 +18,9 @@ func main() {
 	initModuleRestartMapper()
 	initOperatorDictionary()
 	initDroneConfiguration()
+	initDroneSettings()
 	initHealthMonitor()
+	go pipeMain()
 	AddOrUpdateStatus(BrainMainRunner, true)
 	initConfiguration()
 	prepareLogs()
@@ -51,6 +53,7 @@ func main() {
 
 	select {
 	case <-sigChan:
+		ongoingDiagProcess = false
 		pulse.Stop()
 		go func() { stopCondition <- true }()
 		AddOrUpdateStatus(BrainSocketServer, false)

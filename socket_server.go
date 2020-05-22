@@ -82,7 +82,7 @@ func initSocketServer() {
 		ModuleRestart(data)
 	})
 
-	server.On("on_command_success", func(c *gosocketio.Channel, data DroneIdentifier) {
+	server.On("on_command_success", func(c *gosocketio.Channel, data CommandIdentifier) {
 		if drone, droneOk := AutomatonStatuses[data.Name]; droneOk && !drone.ManualFlight {
 			NotifyScheduler(data)
 		}
@@ -126,6 +126,10 @@ func initSocketServer() {
 			}
 		}
 	}()
+
+	server.On("on_manual_command", func(c *gosocketio.Channel, onCommand PyManualCommand) {
+
+	})
 
 	server.On("key_pressed", func(c *gosocketio.Channel, pressed_key OnTouchDown) {
 		if drone, droneOk := AutomatonStatuses[pressed_key.DroneID]; droneOk && drone.ManualFlight && !drone.SimMode {
@@ -204,5 +208,12 @@ func SendNodeLocation(input FlightCoordinate) {
 func SendAutopilotUpdate(input SchedulerSummarizedData) {
 	if server != nil {
 		go server.BroadcastTo("operators", "autopilot_update", input)
+	}
+}
+
+// SendAutomaticCommand Envoi d'une commande automatique
+func SendAutomaticCommand(input PyAutomaticCommand) {
+	if server != nil {
+		go server.BroadcastTo(input.Target, "command", CreateAutomaticCommand(input))
 	}
 }

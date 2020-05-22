@@ -79,6 +79,12 @@ func (t *RPCRegistry) Ping(_ *struct{}, reply *string) error {
 	return nil
 }
 
+// RPCSendCommand Envoi d'une commande [Automatic....]
+func (t *RPCRegistry) RPCSendCommand(command *PyAutomaticCommand, _ *struct{}) error {
+	go SendAutomaticCommand(*command)
+	return nil
+}
+
 var flightSchedulerRPC *RPCRegistry
 
 // ModuleToRestart Module à redémarrer (récupéré en même temps que le "PING")

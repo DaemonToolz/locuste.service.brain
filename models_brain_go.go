@@ -52,6 +52,12 @@ type DroneIdentifier struct {
 	Name string `json:"name"`
 }
 
+// CommandIdentifier Le "acknowledge" d'un drone pour une commande spécifique
+type CommandIdentifier struct {
+	Name    string         `json:"name"`
+	Command PyDroneCommand `json:"command"`
+}
+
 // PyDroneCommand Commande disponible pour le drone
 type PyDroneCommand string
 
@@ -60,7 +66,7 @@ type Axis string
 
 const (
 	// NoCommand Aucune commande
-	NoCommand PyDroneCommand = ""
+	NoCommand PyDroneCommand = "NoCommand"
 	// GoTo Déplacment automatique
 	GoTo PyDroneCommand = "AutomaticGoTo"
 	// Stop Annulation du déplacment automatique
@@ -69,14 +75,24 @@ const (
 	CamDown PyDroneCommand = "AutomaticSetCameraDown"
 	// CamStd Remise à 0 zéro de la caméra
 	CamStd PyDroneCommand = "AutomaticSetStandardCamera"
+	// TiltCamera Changement de l'orientation de la caméra
+	TiltCamera PyDroneCommand = "ManualTiltCamera"
+	// Move Commande de déplacement manuel
+	Move PyDroneCommand = "ManualMove"
+
+	// AutomaticTakeOff Ordre de décollage automatique
+	AutomaticTakeOff PyDroneCommand = "AutomaticTakeOff"
+	// AutomaticGoHome Ordre de retour à la maison automatique
+	AutomaticGoHome PyDroneCommand = "AutomaticGoHome"
+	// AutomaticLand Ordre d'atterrissage automatique
+	AutomaticLand PyDroneCommand = "AutomaticLanding"
+
+	// Section à remplacer
+
 	// TakeOff Décollage
 	TakeOff PyDroneCommand = "CommonTakeOff"
 	// GoHome ORdre de retour à la maison
 	GoHome PyDroneCommand = "CommonGoHome"
-	// Move Commande de déplacement manuel
-	Move PyDroneCommand = "ManualMove"
-	// TiltCamera Changement de l'orientation de la caméra
-	TiltCamera PyDroneCommand = "ManualTiltCamera"
 	// ResetCamera Remise à l'état 0
 	ResetCamera PyDroneCommand = "CommonSetStandardCamera"
 )
