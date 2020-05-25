@@ -49,6 +49,24 @@ var routes = Routes{
 		GetBoundaries,
 	},
 	Route{
+		"Update the control settings for a drone",
+		"POST",
+		"/drone/settings/controls",
+		UpdateDroneControlSettings,
+	},
+	Route{
+		"Get  all drones settings",
+		"GET",
+		"/drone/settings/controls",
+		GetAllDronesSettings,
+	},
+	Route{
+		"Get control settings of one drone",
+		"GET",
+		"/drone/{name}/settings/controls",
+		GetOneDroneSettings,
+	},
+	Route{
 		"Set autopilot target",
 		"POST",
 		"/drone/{name}/course/set",
@@ -103,5 +121,17 @@ var routes = Routes{
 		"POST",
 		"/command",
 		ExecuteRemoteCommand,
+	},
+	Route{
+		"Automated Take off of a drone",
+		"GET",
+		"/drone/{name}/takeoff",
+		TakeOffAutomated,
+	},
+	Route{
+		"Automated go home of a drone",
+		"GET",
+		"/drone/{name}/home",
+		GoHomeAutomated,
 	},
 }

@@ -41,3 +41,15 @@ type SchedulerSummarizedData struct {
 	IsReady     bool   `json:"is_ready"`
 	IsBusy      bool   `json:"is_busy"`
 }
+
+// DroneSummarizedStatus Informations réduites relatif aux drones (états de vol)
+type DroneSummarizedStatus struct {
+	DroneName   string `json:"drone_name"`
+	IsPreparing bool   `json:"is_preparing"`
+	IsMoving    bool   `json:"is_moving"`
+	IsHovering  bool   `json:"is_hovering"`
+	IsLanded    bool   `json:"is_landed"`
+	IsGoingHome bool   `json:"is_going_home"`
+	IsHomeReady bool   `json:"is_home_ready"`
+	IsGPSFixed  bool   `json:"is_gps_ready"`
+}

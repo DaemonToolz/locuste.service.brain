@@ -85,24 +85,19 @@ const (
 	EmergencyLanding PyDroneFlyingStatus = iota
 )
 
-// DroneSummarizedStatus Informations réduites relatif aux drones (états de vol)
-type DroneSummarizedStatus struct {
-	DroneName      string              `json:"drone_name"`
-	IsPreparing    bool                `json:"is_preparing"`
-	IsMoving       bool                `json:"is_moving"`
-	IsHovering     bool                `json:"is_hovering"`
-	IsLanded       bool                `json:"is_landed"`
-	IsGoingHome    bool                `json:"is_going_home"`
-	ReceivedStatus PyDroneFlyingStatus `json:"last_status"`
-}
-
 // DroneControlSettings Variables de contrôle pour un drone donné
 type DroneControlSettings struct {
 	DroneName           string  `json:"drone_name"`
-	VerticalSpeed       float64 `json:"verical_speed"`
+	VerticalSpeed       float64 `json:"vertical_speed"`
 	HorizontalSpeed     float64 `json:"horizontal_speed"`
 	CameraRotationSpeed float64 `json:"camera_speed"`
 
 	MaxTilt          int     `json:"max_tilt"`
-	MaxRotationSpeed float64 `json:"max_rotation_speed`
+	MaxRotationSpeed float64 `json:"max_rotation_speed"`
+}
+
+// DroneFlyingStatusMessage Message en provenance de l'unité de contrôle / Automtate Python
+type DroneFlyingStatusMessage struct {
+	Name   string              `json:"drone_name"`
+	Status PyDroneFlyingStatus `json:"status"`
 }

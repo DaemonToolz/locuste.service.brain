@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-/*  DefineCommand permet de définir l'ordre à envoyer au code Python par le biais des websockets
+/*DefineCommand permet de définir l'ordre à envoyer au code Python par le biais des websockets
 params : OnTouchDown : touche pressée
 return : PyDromeCommandMessage : ordre à envoyer
 */
@@ -72,6 +72,7 @@ func DefineCommand(keyPressed OnTouchDown) PyDroneCommandMessage {
 	}
 
 	tempParams := make(map[string]float64) // On caste en int car la SDK Olympe ARM supported mal les flottant sur
+	settings := GetDroneSettings(keyPressed.DroneID)
 
 	switch command {
 	case NoCommand:
@@ -87,7 +88,7 @@ func DefineCommand(keyPressed OnTouchDown) PyDroneCommandMessage {
 		finalOrder.Params = nil
 
 	case Move:
-		defaultSpeed = 0.20 * multiplier
+		defaultSpeed = settings.HorizontalSpeed * multiplier
 		tempParams[string(XAxis)] = 0
 		tempParams[string(YAxis)] = 0
 		tempParams[string(ZAxis)] = 0
@@ -96,7 +97,7 @@ func DefineCommand(keyPressed OnTouchDown) PyDroneCommandMessage {
 		finalOrder.Params = tempParams
 
 	case TiltCamera:
-		defaultSpeed = 0.2 * multiplier
+		defaultSpeed = settings.VerticalSpeed * multiplier
 		tempParams[string(axis)] = defaultSpeed
 		finalOrder.Params = tempParams
 	}
@@ -105,7 +106,7 @@ func DefineCommand(keyPressed OnTouchDown) PyDroneCommandMessage {
 	return finalOrder
 }
 
-/*  CreateAutomaticGoTo Créer un ordre reçu par l'autopilote
+/*CreateAutomaticGoTo Créer un ordre reçu par l'autopilote
 
  */
 func CreateAutomaticGoTo(input *DroneFlightCoordinates) PyDroneCommandMessage {
@@ -118,7 +119,7 @@ func CreateAutomaticGoTo(input *DroneFlightCoordinates) PyDroneCommandMessage {
 	}
 }
 
-/*  CreateAutomaticCommand Créer un ordre automatique sans paramètres */
+/*CreateAutomaticCommand Créer un ordre automatique sans paramètres */
 func CreateAutomaticCommand(input PyAutomaticCommand) PyDroneCommandMessage {
 	return PyDroneCommandMessage{
 		Name:   input.Name,

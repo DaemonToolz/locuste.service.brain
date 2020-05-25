@@ -19,7 +19,7 @@ var lastStatuses map[Component]bool
 // NullArgType Type NIL à envoyer en paramètre
 type NullArgType struct{}
 
-// RPCNullArg
+// RPCNullArg ...
 var RPCNullArg NullArgType
 
 func initRPCClient() {
@@ -131,5 +131,26 @@ func FetchBoundaries() {
 func UpdateTarget(input FlightCoordinate) {
 	if client != nil && input != (FlightCoordinate{}) {
 		client.Go("RPCRegistry.UpdateTarget", &input, &RPCNullArg, nil)
+	}
+}
+
+// UpdateFlyingStatus mise à jour de l'état du drone (en vol)
+func UpdateFlyingStatus(data DroneFlyingStatusMessage) {
+	if client != nil {
+		client.Go("RPCRegistry.FlyingStatusUpdate", &data, &RPCNullArg, nil)
+	}
+}
+
+// SendGoHomeCommandTo Demander une commande "atterrissage" au drone nommé
+func SendGoHomeCommandTo(name string) {
+	if client != nil {
+		client.Go("RPCRegistry.SendGoHomeCommandTo", &name, &RPCNullArg, nil)
+	}
+}
+
+// SendTakeoffCommandTo Demander une commande "décollage" au drone nommé
+func SendTakeoffCommandTo(name string) {
+	if client != nil {
+		client.Go("RPCRegistry.SendTakeoffCommandTo", &name, &RPCNullArg, nil)
 	}
 }

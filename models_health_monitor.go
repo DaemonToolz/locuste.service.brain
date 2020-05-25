@@ -25,6 +25,8 @@ const (
 	BrainRPCServer Component = "Brain.RPCServer"
 	// BrainSchedulerRPC Connexion à l'ordonanceur / locuste.service.osm
 	BrainSchedulerRPC Component = "Brain.SchedulerConnection"
+	// BrainDiagnostics Module des diagnostics pour l'unité de contrôle
+	BrainDiagnostics Component = "Brain.Diagnostics"
 
 	// SchedulerRPCServer Serveur RPC de l'ordonanceur / locuste.service.osm
 	SchedulerRPCServer Component = "Scheduler.RPCServer"
@@ -34,6 +36,8 @@ const (
 	SchedulerMapHandler Component = "Scheduler.MapHandler"
 	// SchedulerFlightManager Module de pilotage automatique
 	SchedulerFlightManager Component = "Scheduler.FlightManager"
+	// SchedulerDiagnostics Module des diagnostics pour le scheduler
+	SchedulerDiagnostics Component = "Scheduler.Diagnostics"
 )
 
 // ExternalComponent Composant externe lié au drone - exemple : serveur vidéo

@@ -238,3 +238,96 @@ func RestartModule(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 }
+
+// UpdateDroneControlSettings Mise à jour des configurations de vol
+func UpdateDroneControlSettings(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+
+	var post DroneControlSettings
+	err := decoder.Decode(&post)
+
+	if err != nil {
+		if err := json.NewEncoder(w).Encode(struct {
+			Success bool `json:"success"`
+		}{false}); err != nil {
+			failOnError(err, "Unable to load the message")
+			panic(err)
+		}
+	}
+
+	AddOrUpdateDroneSettings(post.DroneName, post)
+	if err := json.NewEncoder(w).Encode(struct {
+		Success bool `json:"success"`
+	}{true}); err != nil {
+		failOnError(err, "Unable to load the message")
+		panic(err)
+	}
+}
+
+// GetOneDroneSettings Récupère les configurations de vol pour un drone
+func GetOneDroneSettings(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	if err := json.NewEncoder(w).Encode(GetDroneSettings(vars["name"])); err != nil {
+		failOnError(err, "Unable to load the message")
+		panic(err)
+	}
+}
+
+// GetAllDronesSettings  Récupère les configurations de vol de tous les drones
+func GetAllDronesSettings(w http.ResponseWriter, r *http.Request) {
+	if err := json.NewEncoder(w).Encode(DroneSettings); err != nil {
+		failOnError(err, "Unable to load the message")
+		panic(err)
+	}
+}
+
+// TakeOffAutomated Active le pilote automatique pour le drone
+func TakeOffAutomated(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	SendTakeoffCommandTo(vars["name"])
+	if err := json.NewEncoder(w).Encode(struct {
+		Success bool `json:"success"`
+	}{true}); err != nil {
+		failOnError(err, "Unable to load the message")
+		panic(err)
+	}
+}
+
+// GoHomeAutomated Instruction
+func GoHomeAutomated(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	SendGoHomeCommandTo(vars["name"])
+	if err := json.NewEncoder(w).Encode(struct {
+		Success bool `json:"success"`
+	}{true}); err != nil {
+		failOnError(err, "Unable to load the message")
+		panic(err)
+	}
+}
+
+// GetDroneFlyingStatus Récupère les états d'un drone'
+func GetDroneFlyingStatus(w http.ResponseWriter, r *http.Request) {
+	/*
+		vars := mux.Vars(r)
+		if err := json.NewEncoder(w).Encode(GetAutopilotStatus(vars["name"])); err != nil {
+			failOnError(err, "Unable to load the message")
+			panic(err)
+		}
+	*/
+}
+
+// GetDronesFlyingStatus Récupère les états de tous les drones
+func GetDronesFlyingStatus(w http.ResponseWriter, r *http.Request) {
+	/*
+		vars := mux.Vars(r)
+		if err := json.NewEncoder(w).Encode(); err != nil {
+			failOnError(err, "Unable to load the message")
+			panic(err)
+		}
+	*/
+}

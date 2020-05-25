@@ -74,6 +74,10 @@ func initSocketServer() {
 		server.BroadcastTo("operators", "acknowledge", data)
 	})
 
+	server.On("flight_status_changed", func(c *gosocketio.Channel, data interface{}) {
+		// UpdateFlyingStatus(data)
+	})
+
 	server.On("internal_status_changed", func(c *gosocketio.Channel, data interface{}) {
 		server.BroadcastTo("operators", "internal_status_changed", data)
 	})
@@ -126,10 +130,6 @@ func initSocketServer() {
 			}
 		}
 	}()
-
-	server.On("on_manual_command", func(c *gosocketio.Channel, onCommand PyManualCommand) {
-
-	})
 
 	server.On("key_pressed", func(c *gosocketio.Channel, pressed_key OnTouchDown) {
 		if drone, droneOk := AutomatonStatuses[pressed_key.DroneID]; droneOk && drone.ManualFlight && !drone.SimMode {

@@ -27,12 +27,16 @@ var ExternalComponantStatuses map[string](map[ExternalComponent]bool)
 // AutopilotStatuses Représente l'état des autopilotes
 var AutopilotStatuses map[string]SchedulerSummarizedData
 
+// FlyingStatuses Représente l'état du drone en vol
+var FlyingStatuses map[string]DroneSummarizedStatus
+
 func initHealthMonitor() {
 	GlobalStatuses = make(map[Component]bool)
 	AutomatonStatuses = make(map[string]PyDroneStatus)
 	DroneStatuses = make(map[string]DroneStatus)
 	ExternalComponantStatuses = make(map[string](map[ExternalComponent]bool))
 	AutopilotStatuses = make(map[string]SchedulerSummarizedData)
+	FlyingStatuses = make(map[string]DroneSummarizedStatus)
 
 	for _, name := range ExtractDroneNames() {
 		AddOrUpdateDroneStatus(name, ExtractDroneStatus(name))
