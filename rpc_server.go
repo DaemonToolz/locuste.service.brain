@@ -66,6 +66,13 @@ func (*RPCRegistry) UpdateAutopilot(args *SchedulerSummarizedData, _ *struct{}) 
 	return nil
 }
 
+// OnFlyingStatusUpdate On a une mise à jour côté Scheduler
+func (*RPCRegistry) OnFlyingStatusUpdate(args *DroneSummarizedStatus, _ *struct{}) error {
+	AddOrUpdateFlyingStatus(*args)
+	go SendFlyingStatusUpdate(*args)
+	return nil
+}
+
 // ServerShutdown Arrêt du serveur RPC
 func (*RPCRegistry) ServerShutdown(_ *struct{}, _ *struct{}) error {
 	AddOrUpdateStatus(SchedulerRPCServer, false)

@@ -312,22 +312,20 @@ func GoHomeAutomated(w http.ResponseWriter, r *http.Request) {
 
 // GetDroneFlyingStatus Récupère les états d'un drone'
 func GetDroneFlyingStatus(w http.ResponseWriter, r *http.Request) {
-	/*
-		vars := mux.Vars(r)
-		if err := json.NewEncoder(w).Encode(GetAutopilotStatus(vars["name"])); err != nil {
-			failOnError(err, "Unable to load the message")
-			panic(err)
-		}
-	*/
+
+	vars := mux.Vars(r)
+	if err := json.NewEncoder(w).Encode(GetFlyingStatus(vars["name"])); err != nil {
+		failOnError(err, "Unable to load the message")
+		panic(err)
+	}
+
 }
 
 // GetDronesFlyingStatus Récupère les états de tous les drones
 func GetDronesFlyingStatus(w http.ResponseWriter, r *http.Request) {
-	/*
-		vars := mux.Vars(r)
-		if err := json.NewEncoder(w).Encode(); err != nil {
-			failOnError(err, "Unable to load the message")
-			panic(err)
-		}
-	*/
+	if err := json.NewEncoder(w).Encode(FlyingStatuses); err != nil {
+		failOnError(err, "Unable to load the message")
+		panic(err)
+	}
+
 }

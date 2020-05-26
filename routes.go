@@ -134,4 +134,16 @@ var routes = Routes{
 		"/drone/{name}/home",
 		GoHomeAutomated,
 	},
+	Route{
+		"Get the flying status of one drone",
+		"GET",
+		"/drone/{name}/flying_status",
+		GetDroneFlyingStatus,
+	},
+	Route{
+		"Get all flying statuses",
+		"GET",
+		"/drones/flying_status",
+		GetDronesFlyingStatus,
+	},
 }

@@ -74,8 +74,18 @@ func initSocketServer() {
 		server.BroadcastTo("operators", "acknowledge", data)
 	})
 
-	server.On("flight_status_changed", func(c *gosocketio.Channel, data interface{}) {
-		// UpdateFlyingStatus(data)
+	server.On("flight_status_changed", func(c *gosocketio.Channel, data DroneFlyingStatusMessage) {
+		UpdateFlyingStatus(data)
+	})
+
+	server.On("navigate_home_status_changed", func(c *gosocketio.Channel, data DroneNavigateHomeStatusMessage) {
+		//UpdateFlyingStatus(data)
+		server.BroadcastTo("operators", "navigate_home_status_changed", data)
+	})
+
+	server.On("on_alert_changed", func(c *gosocketio.Channel, data DroneAlertStatusMessage) {
+		//UpdateFlyingStatus(data)
+		server.BroadcastTo("operators", "on_alert_changed", data)
 	})
 
 	server.On("internal_status_changed", func(c *gosocketio.Channel, data interface{}) {
@@ -204,10 +214,17 @@ func SendNodeLocation(input FlightCoordinate) {
 	}
 }
 
-// SendAutopilotUpdate Demande une mise à jour de l'ordonanceur / pilote automatique
+// SendAutopilotUpdate Sur mise à jour de l'ordonanceur, on informe les opérateurs
 func SendAutopilotUpdate(input SchedulerSummarizedData) {
 	if server != nil {
 		go server.BroadcastTo("operators", "autopilot_update", input)
+	}
+}
+
+// SendFlyingStatusUpdate Sur mise à jour de l'ordonanceur, on informe les opérateurs
+func SendFlyingStatusUpdate(input DroneSummarizedStatus) {
+	if server != nil {
+		go server.BroadcastTo("operators", "flying_status_update", input)
 	}
 }
 

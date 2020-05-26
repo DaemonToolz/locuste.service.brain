@@ -5,11 +5,12 @@ import (
 )
 
 var (
-	statusMutex    sync.Mutex
-	automatonMutex sync.Mutex
-	droneMutex     sync.Mutex
-	extCompMutex   sync.Mutex
-	autopilotMutex sync.Mutex
+	statusMutex       sync.Mutex
+	automatonMutex    sync.Mutex
+	droneMutex        sync.Mutex
+	extCompMutex      sync.Mutex
+	autopilotMutex    sync.Mutex
+	flightStatusMutex sync.Mutex
 )
 
 // GlobalStatuses Récupère l'état de fonctionnement des composants
@@ -45,6 +46,16 @@ func initHealthMonitor() {
 		AddOrUpdateExtCompStatus(name, VideoServer, false)
 		AddOrUpdateExtCompStatus(name, VideoStream, false)
 
+		AddOrUpdateFlyingStatus(DroneSummarizedStatus{
+			DroneName:   name,
+			IsPreparing: true,
+			IsMoving:    false,
+			IsHovering:  false,
+			IsLanded:    true,
+			IsGoingHome: false,
+			IsHomeReady: false,
+			IsGPSFixed:  false,
+		})
 	}
 }
 
@@ -83,7 +94,7 @@ func AddOrUpdateDroneStatus(name string, status PyDroneStatus) {
 	automatonMutex.Unlock()
 }
 
-// GetDroneStatus Récupère l'état d'un composant dédié
+// GetDroneStatuses Récupère l'état d'un composant dédié
 func GetDroneStatuses(name string) PyDroneStatus {
 	automatonMutex.Lock()
 	defer automatonMutex.Unlock()
@@ -118,4 +129,18 @@ func GetExtCompStatus(droneName string) map[ExternalComponent]bool {
 	defer extCompMutex.Unlock()
 	return ExternalComponantStatuses[droneName]
 
+}
+
+// AddOrUpdateFlyingStatus Met à jour les informations de vol
+func AddOrUpdateFlyingStatus(status DroneSummarizedStatus) {
+	flightStatusMutex.Lock()
+	FlyingStatuses[status.DroneName] = status
+	flightStatusMutex.Unlock()
+}
+
+// GetFlyingStatus Récupère le dernier état de vol
+func GetFlyingStatus(name string) DroneSummarizedStatus {
+	flightStatusMutex.Lock()
+	defer flightStatusMutex.Unlock()
+	return FlyingStatuses[name]
 }

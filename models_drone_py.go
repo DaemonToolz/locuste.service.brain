@@ -85,6 +85,40 @@ const (
 	EmergencyLanding PyDroneFlyingStatus = iota
 )
 
+// PyDroneNavigateHomeStatus Status liés au retour "maison"
+type PyDroneNavigateHomeStatus int
+
+const (
+	// Available Retour disponible
+	Available PyDroneNavigateHomeStatus = iota
+	// InProgress En cours de retour
+	InProgress PyDroneNavigateHomeStatus = iota
+	// Unavailable Indisponible
+	Unavailable PyDroneNavigateHomeStatus = iota //
+	// Pending Reçu mais en attente
+	Pending PyDroneNavigateHomeStatus = iota
+)
+
+// PyDroneAlertStatus Alertes remontées par le drone
+type PyDroneAlertStatus int
+
+const (
+	// None Aucune alerte
+	None PyDroneAlertStatus = iota
+	// User Alerte utilisateur
+	User PyDroneAlertStatus = iota
+	// CutOut Alerte "cut-out"
+	CutOut PyDroneAlertStatus = iota
+	// CriticalBattery Niveau de batterie critique
+	CriticalBattery PyDroneAlertStatus = iota
+	// LowBattery Niveau de batterie basse
+	LowBattery PyDroneAlertStatus = iota
+	// TooMuchAngle Trop d'angle (PCMD)
+	TooMuchAngle PyDroneAlertStatus = iota
+	// AlmostEmtpyBattery Batterie presque vide
+	AlmostEmtpyBattery PyDroneAlertStatus = iota
+)
+
 // DroneControlSettings Variables de contrôle pour un drone donné
 type DroneControlSettings struct {
 	DroneName           string  `json:"drone_name"`
@@ -100,4 +134,16 @@ type DroneControlSettings struct {
 type DroneFlyingStatusMessage struct {
 	Name   string              `json:"drone_name"`
 	Status PyDroneFlyingStatus `json:"status"`
+}
+
+// DroneNavigateHomeStatusMessage Message en provenance de l'unité de contrôle / Automtate Python
+type DroneNavigateHomeStatusMessage struct {
+	Name   string                    `json:"drone_name"`
+	Status PyDroneNavigateHomeStatus `json:"status"`
+}
+
+// DroneAlertStatusMessage Message en provenance de l'unité de contrôle / Automtate Python
+type DroneAlertStatusMessage struct {
+	Name   string             `json:"drone_name"`
+	Status PyDroneAlertStatus `json:"status"`
 }

@@ -20,10 +20,11 @@ func main() {
 	initDroneConfiguration()
 	initDroneSettings()
 	initHealthMonitor()
-	go pipeMain()
+
 	AddOrUpdateStatus(BrainMainRunner, true)
 	initConfiguration()
 	prepareLogs()
+	go pipeMain()
 	initRtspListener()
 	RestartRPCServer()
 	initFileWatcher("/home/pi/project/locuste/data") // retirer les chemins d'accès
