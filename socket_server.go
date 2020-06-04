@@ -32,7 +32,7 @@ func initSocketServer() {
 
 	// droneEventServer["shared"]
 	server.On("identify", func(c *gosocketio.Channel, request IdentificationRequest) {
-		log.Printf("Channel %s identified as %s", c.Id(), request)
+		log.Printf("Channel %s identified as %s", c.Id(), request.Name)
 		c.Join(request.Name)
 		channelMapping[c.Id()] = request.Name // On garde ça pour la déconnexion
 		go server.BroadcastTo("operators", "identify", request)
