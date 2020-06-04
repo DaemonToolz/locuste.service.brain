@@ -72,8 +72,6 @@ func pipeMain() {
 	go startReadProcess()
 	go startWriteProcess()
 
-	log.Println("Arrêt du module de diagnostique")
-
 }
 
 func startReadProcess() {
@@ -130,11 +128,23 @@ func listModules(output *os.File) {
 }
 
 func moduleStart(output *os.File, input string) {
-
+	outStr := ""
+	if CallModuleRestart(Component(input)) {
+		outStr = fmt.Sprintf("[%s] - Module démarré avec succès", input)
+	} else {
+		outStr = fmt.Sprintf("[%s] - Echec du démarrage du module", input)
+	}
+	output.WriteString(outStr)
 }
 
 func moduleRestart(output *os.File, input string) {
-
+	outStr := ""
+	if CallModuleRestart(Component(input)) {
+		outStr = fmt.Sprintf("[%s] - Module redémarré avec succès", input)
+	} else {
+		outStr = fmt.Sprintf("[%s] - Echec du redémarrage du module", input)
+	}
+	output.WriteString(outStr)
 }
 
 func moduleStop(output *os.File, input string) {

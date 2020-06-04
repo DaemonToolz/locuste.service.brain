@@ -22,6 +22,7 @@ type Operator struct {
 	ChannelID       string `json:"channel_id"`
 	ControlledDrone string `json:"controlled_drone"`
 	IsAnonymous     bool   `json:"is_anonymous"`
+	IsMobile        bool   `json:"is_mobile"`
 }
 
 // OperatorIdentifier Classe identification opérateur
