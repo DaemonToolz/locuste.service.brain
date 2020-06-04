@@ -34,7 +34,7 @@ func LoggerHandler(next http.HandlerFunc) http.Handler {
 			failOnError(err, "An error occured during the request")
 		}
 		log.Printf("[BEGIN CALL] - %s\t%s\t", r.Method, r.RequestURI)
-		log.Printf("[HEADER] - ", fmt.Sprintf("%q", x))
+		log.Println("[HEADER] - ", fmt.Sprintf("%q", x))
 
 		next.ServeHTTP(w, r)
 

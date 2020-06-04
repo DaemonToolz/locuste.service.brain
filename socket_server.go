@@ -42,7 +42,7 @@ func initSocketServer() {
 
 	//region Refactoring
 	server.On("identify_operator", func(c *gosocketio.Channel) {
-		log.Printf("Nouvel opérateur dans la chambre", c.Id())
+		log.Println("Nouvel opérateur dans la chambre", c.Id())
 		c.Join("operators")
 
 		AddOrUpdateOperator(c.Id(), Operator{
@@ -63,7 +63,7 @@ func initSocketServer() {
 	})
 
 	server.On("identify_mobile", func(c *gosocketio.Channel) {
-		log.Printf("Nouvel opérateur mobile dans la chambre", c.Id())
+		log.Println("Nouvel opérateur mobile dans la chambre", c.Id())
 		c.Join("mobile_operators")
 
 		AddOrUpdateOperator(c.Id(), Operator{
