@@ -5,16 +5,33 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
-)
 
-//9010
-//192.168.1.67
+	ps "github.com/keybase/go-ps"
+)
 
 var serveMux *http.ServeMux
 
 func main() {
+
+	processes, err := ps.Processes()
+	if err != nil {
+		failOnError(err, "Error :")
+	}
+	procCount := 0
+	for index := range processes {
+
+		if strings.Contains(os.Args[0], processes[index].Executable()) {
+			procCount++
+		}
+
+		if procCount > 1 {
+			return
+		}
+	}
+
 	initModuleRestartMapper()
 	initOperatorDictionary()
 	initDroneConfiguration()
