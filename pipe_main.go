@@ -45,6 +45,9 @@ var writePipe *os.File
 var dataMutex sync.Mutex
 var sharedData []string
 
+var in string
+var out string
+
 // AddPipeSharedData Permet d'ajouter une information en provenance de la pipe entrante
 func AddPipeSharedData(input string) {
 	dataMutex.Lock()
@@ -63,9 +66,12 @@ func GetFirstPipeSharedData() string {
 
 // Diagnostic code
 func pipeMain() {
+	out = "/tmp/locuste.diagnostic.brain"
+	in = "/tmp/locuste.brain.diagnostic"
+
 	log.Println("Ouverture de la pipe nommée pour locuste.service.brain")
-	syscall.Mkfifo("/tmp/locuste.brain.diagnostic", 0666)
-	syscall.Mkfifo("/tmp/locuste.diagnostic.brain", 0666)
+	syscall.Mkfifo(in, 0666)
+	syscall.Mkfifo(out, 0666)
 	initCommandAssociation()
 	ongoingDiagProcess = true
 	log.Println("En attente d'instruction de diagnostiques")
@@ -77,7 +83,7 @@ func pipeMain() {
 func startReadProcess() {
 	for ongoingDiagProcess == true {
 		var buffer bytes.Buffer
-		readPipe, _ = os.OpenFile("/tmp/locuste.brain.diagnostic", os.O_RDONLY, os.ModeNamedPipe)
+		readPipe, _ = os.OpenFile(in, os.O_RDONLY, os.ModeNamedPipe)
 		io.Copy(&buffer, readPipe)
 		if buffer.Len() > 0 {
 			AddPipeSharedData(buffer.String())
@@ -89,7 +95,7 @@ func startReadProcess() {
 
 func startWriteProcess() {
 	for ongoingDiagProcess == true {
-		writePipe, _ := os.OpenFile("/tmp/locuste.diagnostic.brain", os.O_WRONLY, os.ModeNamedPipe)
+		writePipe, _ := os.OpenFile(out, os.O_WRONLY, os.ModeNamedPipe)
 		if len(sharedData) > 0 {
 			executeDiagnosticFunction(writePipe, GetFirstPipeSharedData())
 		}
