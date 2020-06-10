@@ -1,8 +1,9 @@
 # locuste.service.brain
 LOCUSTE : Unité de contrôle principale
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/4d77818f7e8b4308b2ae76b581af6c07)](https://www.codacy.com/manual/axel.maciejewski/locuste.service.brain?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DaemonToolz/locuste.service.brain&amp;utm_campaign=Badge_Grade)
+<img width="2575" alt="locuste-mcu-banner" src="https://user-images.githubusercontent.com/6602774/84285947-5a540800-ab3e-11ea-9fe2-1b9986c166b5.png">
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/4d77818f7e8b4308b2ae76b581af6c07)](https://www.codacy.com/manual/axel.maciejewski/locuste.service.brain?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DaemonToolz/locuste.service.brain&amp;utm_campaign=Badge_Grade)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=DaemonToolz_locuste.service.brain&metric=alert_status)](https://sonarcloud.io/dashboard?id=DaemonToolz_locuste.service.brain)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=DaemonToolz_locuste.service.brain&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=DaemonToolz_locuste.service.brain)
