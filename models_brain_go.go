@@ -34,17 +34,44 @@ const (
 	T Key = 84
 
 	// ArrowUp caméra vers le haut
-	ArrowUp = 38
+	ArrowUp Key = 38
 	// ArrowDown caméra vers le base
-	ArrowDown = 40
+	ArrowDown Key = 40
 	// R Reset Camera
-	R = 82
+	R Key = 82
+
+	// JoystickUp Joystic vers le haut
+	JoystickUp Key = 512
+	// JoystickDown Joystic vers le bas
+	JoystickDown Key = 513
+	// JoystickLeft Joystic à gauche
+	JoystickLeft Key = 514
+	// JoystickRight Joystic à droite
+	JoystickRight Key = 515
+)
+
+// JoystickType Type de joystick (contrôle vertical / rotation ou horizontal)
+type JoystickType int
+
+const (
+	// VerticalJoystick Joystick de contrôle vertical
+	VerticalJoystick JoystickType = iota
+	// HorizontalJoystick Joystick de contrôle des mouvements (horizontal)
+	HorizontalJoystick JoystickType = iota
 )
 
 // OnTouchDown Identification d'une touche clavier pressée
 type OnTouchDown struct {
 	DroneID string `json:"drone_id"`
 	KeyDown Key    `json:"key_pressed"`
+}
+
+// OnJoystickEvent Evénements joystick
+type OnJoystickEvent struct {
+	DroneID  string       `json:"drone_id"`
+	KeyEvent Key          `json:"joystick_event"`
+	Joystick JoystickType `json:"joystick_type"`
+	Force    float64      `json:"force"`
 }
 
 // DroneIdentifier Informations envoyées à la GUI pour reconnaître le drone ciblé
@@ -79,6 +106,8 @@ const (
 	TiltCamera PyDroneCommand = "ManualTiltCamera"
 	// Move Commande de déplacement manuel
 	Move PyDroneCommand = "ManualMove"
+	// Tilt Commande de déplacement manuel
+	Tilt PyDroneCommand = "ManualTilt"
 
 	// AutomaticTakeOff Ordre de décollage automatique
 	AutomaticTakeOff PyDroneCommand = "AutomaticTakeOff"

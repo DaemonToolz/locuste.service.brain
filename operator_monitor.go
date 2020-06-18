@@ -18,6 +18,13 @@ func AddOrUpdateOperator(channelID string, operator Operator) {
 	operatorMutex.Unlock()
 }
 
+// GetOperator Récupre un opérateur
+func GetOperator(channelID string) Operator {
+	operatorMutex.Lock()
+	defer operatorMutex.Unlock()
+	return OperatorsInCharge[channelID]
+}
+
 // RemoveOperator Retire un opérateur
 func RemoveOperator(channelID string) {
 	RemoveLead(channelID)
@@ -67,3 +74,15 @@ func IsLeadingDrone(channelID string, drone string) bool {
 	}
 	return OperatorsInCharge[channelID].ControlledDrone == drone
 }
+
+// ChannelNotify Décision du canal à notifier
+type ChannelNotify int
+
+const (
+	// NotifyAll Tout le monde
+	NotifyAll ChannelNotify = iota
+	// NotifyMobile Mobile uniquement
+	NotifyMobile ChannelNotify = iota
+	//NotifyDesktop PC uniquement
+	NotifyDesktop ChannelNotify = iota
+)

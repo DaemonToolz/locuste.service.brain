@@ -20,6 +20,9 @@ var server *gosocketio.Server
 
 var channelMapping map[string]string
 
+var mobileOpRoom string = "mobile_operators"
+var desktopOpRoom string = "operators"
+
 func initSocketServer() {
 	channelMapping = make(map[string]string)
 	server = gosocketio.NewServer(transport.GetDefaultWebsocketTransport())
@@ -35,78 +38,43 @@ func initSocketServer() {
 		log.Printf("Channel %s identified as %s", c.Id(), request.Name)
 		c.Join(request.Name)
 		channelMapping[c.Id()] = request.Name // On garde ça pour la déconnexion
-		go server.BroadcastTo("operators", "identify", request)
+		go notifyRoom(NotifyAll, "identify", request)
+
 		startVideoServer(request.Name, request.VideoPort)
 		startFfmpegStream(request.Name, request.VideoPort)
 	})
 
-	//region Refactoring
 	server.On("identify_operator", func(c *gosocketio.Channel) {
-		log.Println("Nouvel opérateur dans la chambre", c.Id())
-		c.Join("operators")
-
-		AddOrUpdateOperator(c.Id(), Operator{
-			Name:            "Opérateur anonyme",
-			ControlledDrone: "",
-			ChannelID:       c.Id(),
-			IsAnonymous:     true,
-			IsMobile:        false,
-		})
-
-		server.BroadcastTo("operators", "operator_update", "")
-		for _, name := range ExtractDroneNames() {
-			go server.BroadcastTo(name, "identify_operator", "")
-			go server.BroadcastTo("operators", "drone_discovery", DroneIdentifier{
-				Name: name,
-			})
-		}
+		createOperator(c, desktopOpRoom, false)
 	})
 
 	server.On("identify_mobile", func(c *gosocketio.Channel) {
-		log.Println("Nouvel opérateur mobile dans la chambre", c.Id())
-		c.Join("mobile_operators")
-
-		AddOrUpdateOperator(c.Id(), Operator{
-			Name:            "Opérateur anonyme",
-			ControlledDrone: "",
-			ChannelID:       c.Id(),
-			IsAnonymous:     true,
-			IsMobile:        false,
-		})
-		server.BroadcastTo("operators", "operator_update", "")
-		for _, name := range ExtractDroneNames() {
-			go server.BroadcastTo(name, "identify_operator", "")
-			go server.BroadcastTo("mobile_operators", "drone_discovery", DroneIdentifier{
-				Name: name,
-			})
-		}
+		createOperator(c, mobileOpRoom, false)
 	})
-	//endregion Refactoring
 
 	server.On("authenticate", func(c *gosocketio.Channel, data OperatorIdentifier) {
 		// Get Operator + merge
-		AddOrUpdateOperator(c.Id(), Operator{
-			Name:            data.Name,
-			ControlledDrone: "",
-			ChannelID:       c.Id(),
-			IsAnonymous:     false,
-		})
-		server.BroadcastTo("operators", "operator_update", "")
+		op := GetOperator(c.Id())
+		op.Name = data.Name
+		op.ControlledDrone = ""
+		op.IsAnonymous = false
+		AddOrUpdateOperator(c.Id(), op)
+		go notifyRoom(NotifyAll, "operator_update", "")
 	})
 
 	server.On("release_controls", func(c *gosocketio.Channel) {
 		RemoveLead(c.Id())
-		server.BroadcastTo("operators", "operator_update", "")
+		go notifyRoom(NotifyAll, "operator_update", "")
 	})
 
 	// droneEventServer["shared"]
 	server.On("position_update", func(c *gosocketio.Channel, data interface{}) {
-		server.BroadcastTo("operators", "position_update", data)
+		go notifyRoom(NotifyAll, "position_update", data)
 	})
 
 	// droneEventServer["shared"]
 	server.On("acknowledge", func(c *gosocketio.Channel, data DroneIdentifier) {
-		server.BroadcastTo("operators", "acknowledge", data)
+		go notifyRoom(NotifyAll, "acknowledge", data)
 	})
 
 	// droneEventServer["shared"]
@@ -118,19 +86,19 @@ func initSocketServer() {
 	// droneEventServer["shared"]
 	server.On("navigate_home_status_changed", func(c *gosocketio.Channel, data DroneNavigateHomeStatusMessage) {
 		//UpdateFlyingStatus(data)
-		server.BroadcastTo("operators", "navigate_home_status_changed", data)
+		go notifyRoom(NotifyAll, "navigate_home_status_changed", data)
 	})
 
 	// droneEventServer["shared"]
 	server.On("on_alert_changed", func(c *gosocketio.Channel, data DroneAlertStatusMessage) {
 		//UpdateFlyingStatus(data)
-		server.BroadcastTo("operators", "on_alert_changed", data)
+		go notifyRoom(NotifyAll, "on_alert_changed", data)
 	})
 	//endregion Outdoortest
 
 	// droneEventServer["shared"]
 	server.On("internal_status_changed", func(c *gosocketio.Channel, data interface{}) {
-		server.BroadcastTo("operators", "internal_status_changed", data)
+		go notifyRoom(NotifyAll, "internal_status_changed", data)
 	})
 
 	server.On("restart_module", func(c *gosocketio.Channel, data Module) {
@@ -150,12 +118,15 @@ func initSocketServer() {
 	server.On("key_pressed", func(c *gosocketio.Channel, pressed_key OnTouchDown) {
 		if drone, droneOk := AutomatonStatuses[pressed_key.DroneID]; droneOk && drone.ManualFlight && !drone.SimMode {
 			if _, operatorOk := OperatorsInCharge[c.Id()]; operatorOk {
+				if OperatorsInCharge[c.Id()].IsMobile {
+					return // Les opérateurs mobiles sont interdits ici
+				}
 				setLeader := false
 				if setLeader = SetLeadingOperator(c.Id(), pressed_key.DroneID); OperatorsInCharge[c.Id()].IsAnonymous || !setLeader {
 					return
 				}
 				if setLeader {
-					server.BroadcastTo("operators", "operator_update", "")
+					go notifyRoom(NotifyDesktop, "operator_update", "")
 				}
 
 			} else {
@@ -170,17 +141,21 @@ func initSocketServer() {
 		}
 	})
 
+	server.On("joystick_event", func(c *gosocketio.Channel, pressed_key OnTouchDown) {
+
+	})
+
 	// droneControlServer["shared"] + droneEventServer["shared"]
 	server.On(gosocketio.OnDisconnection, func(c *gosocketio.Channel) {
 		log.Printf("Channel %s disconnected", c.Id())
 
-		if room, ok := channelMapping[c.Id()]; ok && room != "operator" {
-			server.BroadcastTo("operators", "relay_endpoint_disconnect", DroneIdentifier{
+		if room, ok := channelMapping[c.Id()]; ok && (room != desktopOpRoom || room != mobileOpRoom) {
+			go notifyRoom(NotifyAll, "relay_endpoint_disconnect", DroneIdentifier{
 				Name: channelMapping[c.Id()],
 			})
 		} else {
 			RemoveOperator(c.Id())
-			server.BroadcastTo("operators", "operator_update", "")
+			go notifyRoom(NotifyAll, "operator_update", "")
 		}
 	})
 }
@@ -211,7 +186,7 @@ func StartWatcher() {
 				UpdateAutopilot(autoPilot)
 				// Le répertoire Data concerne les infos remontées au Brain et au MapHandler.
 				// Imaginer une autre logique pour le MapHandler
-				server.BroadcastTo("operators", "automaton_status_changed", DroneIdentifier{
+				go notifyRoom(NotifyAll, "automaton_status_changed", DroneIdentifier{
 					Name: droneName,
 				})
 			}
@@ -234,7 +209,7 @@ func RedirectCommand(command RemoteManualCommand) {
 // NotifyExternalCompChange Indique un changement dans un des modules externe
 func NotifyExternalCompChange(droneName string) {
 	if server != nil {
-		server.BroadcastTo("operators", "external_module_update", DroneIdentifier{
+		go notifyRoom(NotifyAll, "external_module_update", DroneIdentifier{
 			Name: droneName,
 		})
 	}
@@ -245,35 +220,35 @@ func SendLastCoordinate(drone DroneFlightCoordinates) {
 	// coordinates.latitude,coordinates.longitude,self._drone_coordinates.altitude
 	if server != nil {
 		go server.BroadcastTo(drone.DroneName, "command", CreateAutomaticGoTo(&drone))
-		go server.BroadcastTo("operators", "add_on_schedule", drone)
+		go notifyRoom(NotifyAll, "add_on_schedule", drone)
 	}
 }
 
 // SendTargetCoordinates Envoi aux opérateurs les dernières coordonnées cibles
 func SendTargetCoordinates(input FlightCoordinate) {
 	if server != nil {
-		go server.BroadcastTo("operators", "target_recalculated", input)
+		go notifyRoom(NotifyAll, "target_recalculated", input)
 	}
 }
 
 // SendNodeLocation Envoi aux opérateurs les dernières coordonnées cibles
 func SendNodeLocation(input FlightCoordinate) {
 	if server != nil {
-		go server.BroadcastTo("operators", "on_location_update", input)
+		go notifyRoom(NotifyAll, "on_location_update", input)
 	}
 }
 
 // SendAutopilotUpdate Sur mise à jour de l'ordonanceur, on informe les opérateurs
 func SendAutopilotUpdate(input SchedulerSummarizedData) {
 	if server != nil {
-		go server.BroadcastTo("operators", "autopilot_update", input)
+		go notifyRoom(NotifyAll, "autopilot_update", input)
 	}
 }
 
 // SendFlyingStatusUpdate Sur mise à jour de l'ordonanceur, on informe les opérateurs
 func SendFlyingStatusUpdate(input DroneSummarizedStatus) {
 	if server != nil {
-		go server.BroadcastTo("operators", "flying_status_update", input)
+		go notifyRoom(NotifyAll, "flying_status_update", input)
 	}
 }
 
@@ -282,4 +257,35 @@ func SendAutomaticCommand(input PyAutomaticCommand) {
 	if server != nil {
 		go server.BroadcastTo(input.Target, "command", CreateAutomaticCommand(input))
 	}
+}
+
+func createOperator(c *gosocketio.Channel, room string, isMobile bool) {
+	log.Println("Nouvel opérateur dans la chambre : (", c.Id(), room, ")")
+	c.Join(room)
+
+	AddOrUpdateOperator(c.Id(), Operator{
+		Name:            "Opérateur anonyme",
+		ControlledDrone: "",
+		ChannelID:       c.Id(),
+		IsAnonymous:     true,
+		IsMobile:        isMobile,
+	})
+
+	go notifyRoom(NotifyAll, "operator_update", "")
+	for _, name := range ExtractDroneNames() {
+		go notifyRoom(NotifyAll, "identify_operator", "")
+		go notifyRoom(NotifyAll, "drone_discovery", DroneIdentifier{
+			Name: name,
+		})
+	}
+}
+
+func notifyRoom(who ChannelNotify, event string, data interface{}) {
+	if who == NotifyAll || who == NotifyMobile {
+		go server.BroadcastTo(mobileOpRoom, event, data)
+	}
+	if who == NotifyAll || who == NotifyDesktop {
+		go server.BroadcastTo(desktopOpRoom, event, data)
+	}
+
 }
