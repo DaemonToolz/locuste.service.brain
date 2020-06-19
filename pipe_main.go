@@ -129,7 +129,7 @@ func listModules(output *os.File) {
 		outputStr += fmt.Sprintf("[%s]:%s,", string(key), strconv.FormatBool(value))
 	}
 
-	output.WriteString(outputStr)
+	sendPipeMessage(output, outputStr)
 	log.Println("Informations envoyées " + outputStr)
 }
 
@@ -140,7 +140,7 @@ func moduleStart(output *os.File, input string) {
 	} else {
 		outStr = fmt.Sprintf("[%s] - Echec du démarrage du module", input)
 	}
-	output.WriteString(outStr)
+	sendPipeMessage(output, outStr)
 }
 
 func moduleRestart(output *os.File, input string) {
@@ -150,9 +150,13 @@ func moduleRestart(output *os.File, input string) {
 	} else {
 		outStr = fmt.Sprintf("[%s] - Echec du redémarrage du module", input)
 	}
-	output.WriteString(outStr)
+	sendPipeMessage(output, outStr)
 }
 
 func moduleStop(output *os.File, input string) {
 
+}
+
+func sendPipeMessage(output *os.File, input string) {
+	output.WriteString(fmt.Sprintf("%d|%s", len(input), input))
 }
