@@ -8,6 +8,7 @@ package main
 type IdentificationRequest struct {
 	Name         string      `json:"name"`
 	VideoPort    int         `json:"video_port"`
+	ZMQPort      int         `json:"zmq_port"`
 	IP           string      `json:"ip"`
 	Connected    bool        `json:"connected"`
 	ManualFlight bool        `json:"manual"`

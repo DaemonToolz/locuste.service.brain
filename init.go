@@ -32,6 +32,8 @@ func main() {
 		}
 	}
 
+	initZMQ()
+
 	initModuleRestartMapper()
 	initOperatorDictionary()
 	initDroneConfiguration()
@@ -41,7 +43,9 @@ func main() {
 	AddOrUpdateStatus(BrainMainRunner, true)
 	initConfiguration()
 	prepareLogs()
+
 	go pipeMain()
+
 	initRtspListener()
 	RestartRPCServer()
 	initFileWatcher("/home/pi/project/locuste/data") // retirer les chemins d'accès
@@ -74,11 +78,15 @@ func main() {
 		ongoingDiagProcess = false
 		pulse.Stop()
 		go func() { stopCondition <- true }()
+
+		DestroyZMQRouters()
+
 		AddOrUpdateStatus(BrainSocketServer, false)
 		AddOrUpdateStatus(BrainHttpServer, false)
 		AddOrUpdateStatus(BrainMainRunner, false)
 		AddOrUpdateStatus(BrainWatcher, false)
 		AddOrUpdateStatus(BrainRPCServer, false)
+
 		Unregister()
 
 		time.Sleep(5 * time.Second)

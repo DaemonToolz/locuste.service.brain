@@ -38,6 +38,7 @@ func initSocketServer() {
 		log.Printf("Channel %s identified as %s", c.Id(), request.Name)
 		c.Join(request.Name)
 		channelMapping[c.Id()] = request.Name // On garde ça pour la déconnexion
+		go CreateZMQDealer(request)
 		go notifyRoom(NotifyAll, "identify", request)
 
 		startVideoServer(request.Name, request.VideoPort)
@@ -136,7 +137,7 @@ func initSocketServer() {
 			command := DefineCommand(pressed_key)
 			if command.Name != NoCommand {
 				// droneControlServer["shared"] | droneControlServer[pressed_key.DroneID]
-				server.BroadcastTo(pressed_key.DroneID, "command", command)
+				go SendToZMQMessageChannel(pressed_key.DroneID, command)
 			}
 		}
 	})
@@ -150,6 +151,7 @@ func initSocketServer() {
 		log.Printf("Channel %s disconnected", c.Id())
 
 		if room, ok := channelMapping[c.Id()]; ok && (room != desktopOpRoom || room != mobileOpRoom) {
+			DestroyZMQDealer(room)
 			go notifyRoom(NotifyAll, "relay_endpoint_disconnect", DroneIdentifier{
 				Name: channelMapping[c.Id()],
 			})
@@ -219,7 +221,7 @@ func NotifyExternalCompChange(droneName string) {
 func SendLastCoordinate(drone DroneFlightCoordinates) {
 	// coordinates.latitude,coordinates.longitude,self._drone_coordinates.altitude
 	if server != nil {
-		go server.BroadcastTo(drone.DroneName, "command", CreateAutomaticGoTo(&drone))
+		go SendToZMQMessageChannel(drone.DroneName, CreateAutomaticGoTo(&drone))
 		go notifyRoom(NotifyAll, "add_on_schedule", drone)
 	}
 }
@@ -255,7 +257,7 @@ func SendFlyingStatusUpdate(input DroneSummarizedStatus) {
 // SendAutomaticCommand Envoi d'une commande automatique
 func SendAutomaticCommand(input PyAutomaticCommand) {
 	if server != nil {
-		go server.BroadcastTo(input.Target, "command", CreateAutomaticCommand(input))
+		go SendToZMQMessageChannel(input.Target, CreateAutomaticCommand(input))
 	}
 }
 
