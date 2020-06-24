@@ -37,6 +37,7 @@ Détail des choix techniques pour la partie Unité de Contrôle :
 * [Golang] - Rédaction rapide et simple de programmes orientés web, multithreading et multiprocessing intégré au langage
 * [RPC] - Une des méthodes de communication les plus rapide
 * [SocketIO] - Elément facile intégré avec Angular, Node et Python
+* [ZMQ] - Système de messaging simple et rapide
 
 Evolutions à venir : 
 * Scission du serveur de socket en deux serveurs distincts afin de mieux répartir la charge (Opérateurs / Automates Python)
