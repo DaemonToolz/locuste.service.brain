@@ -117,21 +117,23 @@ func initSocketServer() {
 
 	// Plan the auto-scaling system in order to split the charge on several sockets, and not one
 	server.On("key_pressed", func(c *gosocketio.Channel, pressed_key OnTouchDown) {
-		if drone, droneOk := AutomatonStatuses[pressed_key.DroneID]; droneOk && drone.ManualFlight && !drone.SimMode {
-			if _, operatorOk := OperatorsInCharge[c.Id()]; operatorOk {
-				if OperatorsInCharge[c.Id()].IsMobile {
-					return // Les opérateurs mobiles sont interdits ici
-				}
-				setLeader := false
-				if setLeader = SetLeadingOperator(c.Id(), pressed_key.DroneID); OperatorsInCharge[c.Id()].IsAnonymous || !setLeader {
+		if drone, droneOk := AutomatonStatuses[pressed_key.DroneID]; droneOk && drone.ManualFlight {
+			if !drone.SimMode {
+				if _, operatorOk := OperatorsInCharge[c.Id()]; operatorOk {
+					if OperatorsInCharge[c.Id()].IsMobile {
+						return // Les opérateurs mobiles sont interdits ici
+					}
+					setLeader := false
+					if setLeader = SetLeadingOperator(c.Id(), pressed_key.DroneID); OperatorsInCharge[c.Id()].IsAnonymous || !setLeader {
+						return
+					}
+					if setLeader {
+						go notifyRoom(NotifyAll, "operator_update", "")
+					}
+
+				} else {
 					return
 				}
-				if setLeader {
-					go notifyRoom(NotifyDesktop, "operator_update", "")
-				}
-
-			} else {
-				return
 			}
 
 			command := DefineCommand(pressed_key)
@@ -140,10 +142,34 @@ func initSocketServer() {
 				go SendToZMQMessageChannel(pressed_key.DroneID, command)
 			}
 		}
+
 	})
 
-	server.On("joystick_event", func(c *gosocketio.Channel, pressed_key OnTouchDown) {
+	server.On("joystick_event", func(c *gosocketio.Channel, joystickEvent OnJoystickEvent) {
+		if drone, droneOk := AutomatonStatuses[joystickEvent.DroneID]; droneOk && drone.ManualFlight {
+			if !drone.SimMode {
+				if _, operatorOk := OperatorsInCharge[c.Id()]; operatorOk {
+					if !OperatorsInCharge[c.Id()].IsMobile {
+						return // Les opérateurs mobiles sont interdits ici
+					}
+					setLeader := false
+					if setLeader = SetLeadingOperator(c.Id(), joystickEvent.DroneID); OperatorsInCharge[c.Id()].IsAnonymous || !setLeader {
+						return
+					}
+					if setLeader {
+						go notifyRoom(NotifyAll, "operator_update", "")
+					}
+				} else {
+					return
+				}
+			}
 
+			command := DefinePCMDCommand(joystickEvent)
+			if command.Name != NoCommand {
+				// droneControlServer["shared"] | droneControlServer[pressed_key.DroneID]
+				go SendToZMQMessageChannel(joystickEvent.DroneID, command)
+			}
+		}
 	})
 
 	// droneControlServer["shared"] + droneEventServer["shared"]

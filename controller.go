@@ -157,3 +157,12 @@ func ModuleRestart(module Module) {
 	log.Println("Module à redémarrer : ", module)
 	CallModuleRestart(Component(module.System + "." + module.SubSystem))
 }
+
+// DefinePCMDCommand Définition de la commande PCMD à envoyer
+func DefinePCMDCommand(event OnJoystickEvent) PyDroneCommandMessage {
+	// TODO
+	return PyDroneCommandMessage{
+		Name: NoCommand,
+	}
+
+}

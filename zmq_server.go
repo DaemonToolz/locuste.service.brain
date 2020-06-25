@@ -78,13 +78,13 @@ func SendZMQMessage(name string, payload interface{}) {
 		}
 	}()
 
-	print(payload)
 	if _, ok := zmqDealers[name]; ok {
 		jPayload, err := json.Marshal(&payload)
 		if err != nil {
 			failOnError(err, fmt.Sprintf("SendMessSendZMQMessageage:%s", name))
 			return
 		}
+
 		zmqAccessMutex.Lock()
 		_, erro := zmqDealers[name].Write([]byte(jPayload))
 		zmqAccessMutex.Unlock()
