@@ -18,17 +18,59 @@ func initDroneSettings() {
 			CameraRotationSpeed: 0.20, // en degrés/s
 			VerticalSpeed:       0.20, // m/s
 			HorizontalSpeed:     0.20, // m/s
-			MaxTilt:             15,   // 15% - sera utilisé lorsque l'on intégrera la version PCMD ~ utilisateur avancé
 			MaxRotationSpeed:    0.20, // en degrés/s
+
+			MaxTilt:     0, // 5% - sera utilisé lorsque l'on intégrera la version PCMD ~ utilisateur avancé
+			MaxThrottle: 0, // 5%
+			MaxYaw:      5, // 5%
 		})
 	}
 }
 
 // AddOrUpdateDroneSettings Mise à jour des paramètres de vol d'un drone
 func AddOrUpdateDroneSettings(name string, settings DroneControlSettings) {
-	droneSettingMutex.Lock()
-	DroneSettings[name] = settings
-	droneSettingMutex.Unlock()
+	var original *DroneControlSettings
+	if _, ok := DroneSettings[name]; ok {
+		droneSettingMutex.Lock()
+		tmp := DroneSettings[name]
+		droneSettingMutex.Unlock()
+		original = &tmp
+	}
+
+	if original != nil {
+		if settings.CameraRotationSpeed > 0 {
+			original.CameraRotationSpeed = settings.CameraRotationSpeed
+		}
+		if settings.VerticalSpeed > 0 {
+			original.VerticalSpeed = settings.VerticalSpeed
+		}
+		if settings.HorizontalSpeed > 0 {
+			original.HorizontalSpeed = settings.HorizontalSpeed
+		}
+		if settings.MaxRotationSpeed > 0 {
+			original.MaxRotationSpeed = settings.MaxRotationSpeed
+		}
+
+		if settings.MaxTilt > 0 {
+			original.MaxTilt = settings.MaxTilt
+		}
+		if settings.MaxThrottle > 0 {
+			original.MaxThrottle = settings.MaxThrottle
+		}
+		if settings.MaxYaw > 0 {
+			original.MaxYaw = settings.MaxYaw
+		}
+
+		droneSettingMutex.Lock()
+		DroneSettings[name] = *original
+		droneSettingMutex.Unlock()
+
+	} else {
+		droneSettingMutex.Lock()
+		DroneSettings[name] = settings
+		droneSettingMutex.Unlock()
+	}
+
 }
 
 // GetDroneSettings Récupère les paramètres d'un drone

@@ -160,9 +160,40 @@ func ModuleRestart(module Module) {
 
 // DefinePCMDCommand Définition de la commande PCMD à envoyer
 func DefinePCMDCommand(event OnJoystickEvent) PyDroneCommandMessage {
-	// TODO
-	return PyDroneCommandMessage{
-		Name: NoCommand,
+	var target SpeedJoystickEvent = event.Payload
+
+	if target.Flag {
+		settings := GetDroneSettings(event.DroneID)
+		target.Yaw = setInstruction(target.Yaw, settings.MaxYaw)
+		target.Roll = setInstruction(target.Roll, settings.MaxTilt)
+		target.Pitch = setInstruction(target.Pitch, settings.MaxTilt)
+		target.Throttle = setInstruction(target.Throttle, settings.MaxThrottle)
+	} else {
+		target.Yaw = 0
+		target.Roll = 0
+		target.Pitch = 0
+		target.Throttle = 0
 	}
 
+	return PyDroneCommandMessage{
+		Name:   Tilt,
+		Params: target,
+	}
+
+}
+
+func setInstruction(in int, originalSetting int) int {
+	mul := 0
+	if in > 0 {
+		mul = 1
+	} else if in < 0 {
+		mul = -1
+	} else {
+		mul = 0
+	}
+
+	if in > originalSetting || (in < (-1 * originalSetting)) {
+		return mul * originalSetting
+	}
+	return in
 }

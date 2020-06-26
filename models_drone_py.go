@@ -126,9 +126,12 @@ type DroneControlSettings struct {
 	VerticalSpeed       float64 `json:"vertical_speed"`
 	HorizontalSpeed     float64 `json:"horizontal_speed"`
 	CameraRotationSpeed float64 `json:"camera_speed"`
+	MaxRotationSpeed    float64 `json:"max_rotation_speed"`
 
-	MaxTilt          int     `json:"max_tilt"`
-	MaxRotationSpeed float64 `json:"max_rotation_speed"`
+	// Section mobile
+	MaxTilt     int `json:"max_tilt"`
+	MaxYaw      int `json:"max_yaw"`
+	MaxThrottle int `json:"max_throttle"`
 }
 
 // DroneFlyingStatusMessage Message en provenance de l'unité de contrôle / Automtate Python

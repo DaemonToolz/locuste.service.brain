@@ -50,7 +50,7 @@ func initSocketServer() {
 	})
 
 	server.On("identify_mobile", func(c *gosocketio.Channel) {
-		createOperator(c, mobileOpRoom, false)
+		createOperator(c, mobileOpRoom, true)
 	})
 
 	server.On("authenticate", func(c *gosocketio.Channel, data OperatorIdentifier) {
@@ -150,7 +150,7 @@ func initSocketServer() {
 			if !drone.SimMode {
 				if _, operatorOk := OperatorsInCharge[c.Id()]; operatorOk {
 					if !OperatorsInCharge[c.Id()].IsMobile {
-						return // Les opérateurs mobiles sont interdits ici
+						return // Les opérateurs desktop sont interdits ici
 					}
 					setLeader := false
 					if setLeader = SetLeadingOperator(c.Id(), joystickEvent.DroneID); OperatorsInCharge[c.Id()].IsAnonymous || !setLeader {

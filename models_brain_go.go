@@ -41,16 +41,6 @@ const (
 	R Key = 82
 )
 
-// JoystickType Type de joystick (contrôle vertical / rotation ou horizontal)
-type JoystickType int
-
-const (
-	// SpeedJoystick Joystick dédié au mouvement (Forwards, Back, Left, Right)
-	SpeedJoystick JoystickType = iota
-	// AltitutdeJoystick Joystick dédié à l'altitude (Up, Down, Rotate left, Rotate right)
-	AltitutdeJoystick JoystickType = iota
-)
-
 // OnTouchDown Identification d'une touche clavier pressée
 type OnTouchDown struct {
 	DroneID string `json:"drone_id"`
@@ -59,21 +49,17 @@ type OnTouchDown struct {
 
 // OnJoystickEvent Evénements joystick
 type OnJoystickEvent struct {
-	DroneID string       `json:"drone_id"`
-	Payload interface{}  `json:"payload"`
-	Type    JoystickType `json:"joystick_type"`
+	DroneID string             `json:"drone_id"`
+	Payload SpeedJoystickEvent `json:"payload"`
 }
 
 // SpeedJoystickEvent Evénements joystick SpeedJoystick
 type SpeedJoystickEvent struct {
-	Yaw  float64 `json:"yaw"`
-	Roll float64 `json:"roll"`
-}
-
-// AltJoystickEvent Evénements joystick AltitutdeJoystick
-type AltJoystickEvent struct {
-	Up       float64 `json:"up"`
-	Rotation float64 `json:"rotation"`
+	Flag     bool `json:"flag"`
+	Yaw      int  `json:"yaw"`
+	Roll     int  `json:"roll"`
+	Pitch    int  `json:"pitch"`
+	Throttle int  `json:"throttle"`
 }
 
 // DroneIdentifier Informations envoyées à la GUI pour reconnaître le drone ciblé
