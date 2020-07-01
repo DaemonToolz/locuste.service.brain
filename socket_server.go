@@ -15,9 +15,6 @@ import (
 
 var server *gosocketio.Server
 
-// var droneEventServer map[string]*gosocketio.Server
-// var droneControlServer  map[string]*gosocketio.Server
-
 var channelMapping map[string]string
 
 var mobileOpRoom string = "mobile_operators"
@@ -231,7 +228,8 @@ func StartWatcher() {
 
 // RedirectCommand Redirige la commande manuelle
 func RedirectCommand(command RemoteManualCommand) {
-	server.BroadcastTo(command.Target, string(command.Command), "")
+	//server.BroadcastTo(command.Target, string(command.Command), "")
+	go SendToZMQMessageChannel(command.Target, command)
 }
 
 // NotifyExternalCompChange Indique un changement dans un des modules externe

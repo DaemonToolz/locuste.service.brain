@@ -48,6 +48,8 @@ const (
 	VideoServer ExternalComponent = "External.VideoServer"
 	// VideoStream Flux vidéo (FFMPEG vers Websocket)
 	VideoStream ExternalComponent = "External.VideoStream"
+	// OrderStream Flux vidéo (FFMPEG vers Websocket)
+	OrderStream ExternalComponent = "External.OrderStream"
 )
 
 // Module System - Sous-sytème

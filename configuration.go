@@ -11,11 +11,12 @@ import (
 
 // Config Section liée au fichier de configuration
 type Config struct {
-	Host       string `json:"host"`
-	Port       int    `json:"port"`
-	SocketPort int    `json:"socket_port"`
-	RPCPort    int    `json:"rpc_port"`
-	RtspPort   int    `json:"rtsp_port"`
+	Host            string `json:"host"`
+	Port            int    `json:"port"`
+	SocketPort      int    `json:"socket_port"`
+	DroneSocketPort int    `json:"dr_socket_port"`
+	RPCPort         int    `json:"rpc_port"`
+	RtspPort        int    `json:"rtsp_port"`
 
 	SchedulerPort int `json:"scheduler_port"`
 }
@@ -42,12 +43,26 @@ func (cfg *Config) socketListenUri() string {
 	return fmt.Sprintf("%s:%d", cfg.Host, cfg.SocketPort)
 }
 
+func (cfg *Config) droneSocketListenURI() string {
+	return fmt.Sprintf("%s:%d", cfg.Host, cfg.DroneSocketPort)
+}
+
 func (cfg *Config) rpcListenUri() string {
 	return fmt.Sprintf("%s:%d", cfg.Host, cfg.RPCPort)
 }
 
 func (cfg *Config) rpcSchedulerPort() string {
 	return fmt.Sprintf("%s:%d", cfg.Host, cfg.SchedulerPort)
+}
+
+func loadConf(path string, output *interface{}) {
+	configFile, err := os.Open(path)
+	defer configFile.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	jsonParser := json.NewDecoder(configFile)
+	jsonParser.Decode(output)
 }
 
 func initConfiguration() {

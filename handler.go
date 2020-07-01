@@ -10,6 +10,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var loadErrorMsg string = "Unable to load the message"
+
+var failStructResponse = struct {
+	Success bool `json:"success"`
+}{false}
+
+var successStructResponse = struct {
+	Success bool `json:"success"`
+}{true}
+
 // GetDronesNames retourne le nom de tous les drones disponibles
 func GetDronesNames(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -24,7 +34,7 @@ func GetDroneStatus(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	if err := json.NewEncoder(w).Encode(GetDroneStatuses(vars["name"])); err != nil {
-		failOnError(err, "Unable to load the message")
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -33,7 +43,7 @@ func GetDroneStatus(w http.ResponseWriter, r *http.Request) {
 func GetIntegrity(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewEncoder(w).Encode(GlobalStatuses); err != nil {
-		failOnError(err, "Unable to load the message")
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -48,7 +58,7 @@ func GetOperators(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(operators); err != nil {
-		failOnError(err, "Unable to load the message")
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -62,19 +72,15 @@ func SetCourse(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&post)
 
 	if err != nil {
-		if err := json.NewEncoder(w).Encode(struct {
-			Success bool `json:"success"`
-		}{false}); err != nil {
-			failOnError(err, "Unable to load the message")
+		if err := json.NewEncoder(w).Encode(failStructResponse); err != nil {
+			failOnError(err, loadErrorMsg)
 			panic(err)
 		}
 	}
 
 	UpdateTarget(post)
-	if err := json.NewEncoder(w).Encode(struct {
-		Success bool `json:"success"`
-	}{true}); err != nil {
-		failOnError(err, "Unable to load the message")
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -88,19 +94,15 @@ func ExecuteRemoteCommand(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&post)
 
 	if err != nil {
-		if err := json.NewEncoder(w).Encode(struct {
-			Success bool `json:"success"`
-		}{false}); err != nil {
-			failOnError(err, "Unable to load the message")
+		if err := json.NewEncoder(w).Encode(failStructResponse); err != nil {
+			failOnError(err, loadErrorMsg)
 			panic(err)
 		}
 	}
 
 	RedirectCommand(post)
-	if err := json.NewEncoder(w).Encode(struct {
-		Success bool `json:"success"`
-	}{true}); err != nil {
-		failOnError(err, "Unable to load the message")
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -111,20 +113,16 @@ func RestartVideoServer(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 	conv, err := strconv.Atoi(strings.SplitN(name, ".", -1)[2])
 	if err != nil {
-		if err := json.NewEncoder(w).Encode(struct {
-			Success bool `json:"success"`
-		}{false}); err != nil {
-			failOnError(err, "Unable to load the message")
+		if err := json.NewEncoder(w).Encode(failStructResponse); err != nil {
+			failOnError(err, loadErrorMsg)
 			panic(err)
 		}
 		return
 	}
 	videoPort := 7000 + conv
 	startVideoServer(name, videoPort)
-	if err := json.NewEncoder(w).Encode(struct {
-		Success bool `json:"success"`
-	}{true}); err != nil {
-		failOnError(err, "Unable to load the message")
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -135,10 +133,8 @@ func RestartVideoStream(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 	conv, err := strconv.Atoi(strings.SplitN(name, ".", -1)[2])
 	if err != nil {
-		if err := json.NewEncoder(w).Encode(struct {
-			Success bool `json:"success"`
-		}{false}); err != nil {
-			failOnError(err, "Unable to load the message")
+		if err := json.NewEncoder(w).Encode(failStructResponse); err != nil {
+			failOnError(err, loadErrorMsg)
 			panic(err)
 		}
 		return
@@ -146,10 +142,28 @@ func RestartVideoStream(w http.ResponseWriter, r *http.Request) {
 	videoPort := 7000 + conv
 	startFfmpegStream(name, videoPort)
 
-	if err := json.NewEncoder(w).Encode(struct {
-		Success bool `json:"success"`
-	}{true}); err != nil {
-		failOnError(err, "Unable to load the message")
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
+		panic(err)
+	}
+}
+
+// RestartZMQServer Permet de redémarrer le serveur de messages ZMQ
+func RestartZMQServer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+	conv, err := strconv.Atoi(strings.SplitN(name, ".", -1)[2])
+	if err != nil {
+		if err := json.NewEncoder(w).Encode(failStructResponse); err != nil {
+			failOnError(err, loadErrorMsg)
+			panic(err)
+		}
+		return
+	}
+	zmqPort := 7300 + conv
+	StartZMQServer(name, zmqPort)
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -158,7 +172,7 @@ func RestartVideoStream(w http.ResponseWriter, r *http.Request) {
 func GetDroneHealth(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if err := json.NewEncoder(w).Encode(GetExtCompStatus(vars["name"])); err != nil {
-		failOnError(err, "Unable to load the message")
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -166,7 +180,7 @@ func GetDroneHealth(w http.ResponseWriter, r *http.Request) {
 // GetBoundaries Récupère les limites de la carte (google map)
 func GetBoundaries(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(flightSchedulerRPC.MapBoundaries); err != nil {
-		failOnError(err, "Unable to load the message")
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -175,7 +189,7 @@ func GetBoundaries(w http.ResponseWriter, r *http.Request) {
 func GetAutopilot(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if err := json.NewEncoder(w).Encode(GetAutopilotStatus(vars["name"])); err != nil {
-		failOnError(err, "Unable to load the message")
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -188,10 +202,8 @@ func SetAutopilotOn(w http.ResponseWriter, r *http.Request) {
 	autoPilot.IsActive = true
 	UpdateAutopilot(autoPilot)
 
-	if err := json.NewEncoder(w).Encode(struct {
-		Success bool `json:"success"`
-	}{true}); err != nil {
-		failOnError(err, "Unable to load the message")
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -204,10 +216,8 @@ func SetAutopilotOff(w http.ResponseWriter, r *http.Request) {
 	autoPilot.IsActive = false
 	UpdateAutopilot(autoPilot)
 
-	if err := json.NewEncoder(w).Encode(struct {
-		Success bool `json:"success"`
-	}{true}); err != nil {
-		failOnError(err, "Unable to load the message")
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -222,19 +232,15 @@ func RestartModule(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&post)
 
 	if err != nil {
-		if err := json.NewEncoder(w).Encode(struct {
-			Success bool `json:"success"`
-		}{false}); err != nil {
-			failOnError(err, "Unable to load the message")
+		if err := json.NewEncoder(w).Encode(failStructResponse); err != nil {
+			failOnError(err, loadErrorMsg)
 			panic(err)
 		}
 	}
 
 	ModuleRestart(post)
-	if err := json.NewEncoder(w).Encode(struct {
-		Success bool `json:"success"`
-	}{true}); err != nil {
-		failOnError(err, "Unable to load the message")
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -249,19 +255,15 @@ func UpdateDroneControlSettings(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&post)
 
 	if err != nil {
-		if err := json.NewEncoder(w).Encode(struct {
-			Success bool `json:"success"`
-		}{false}); err != nil {
-			failOnError(err, "Unable to load the message")
+		if err := json.NewEncoder(w).Encode(failStructResponse); err != nil {
+			failOnError(err, loadErrorMsg)
 			panic(err)
 		}
 	}
 
 	AddOrUpdateDroneSettings(post.DroneName, post)
-	if err := json.NewEncoder(w).Encode(struct {
-		Success bool `json:"success"`
-	}{true}); err != nil {
-		failOnError(err, "Unable to load the message")
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -271,7 +273,7 @@ func GetOneDroneSettings(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	if err := json.NewEncoder(w).Encode(GetDroneSettings(vars["name"])); err != nil {
-		failOnError(err, "Unable to load the message")
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -279,7 +281,7 @@ func GetOneDroneSettings(w http.ResponseWriter, r *http.Request) {
 // GetAllDronesSettings  Récupère les configurations de vol de tous les drones
 func GetAllDronesSettings(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(DroneSettings); err != nil {
-		failOnError(err, "Unable to load the message")
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -289,10 +291,8 @@ func TakeOffAutomated(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	SendTakeoffCommandTo(vars["name"])
-	if err := json.NewEncoder(w).Encode(struct {
-		Success bool `json:"success"`
-	}{true}); err != nil {
-		failOnError(err, "Unable to load the message")
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -302,10 +302,8 @@ func GoHomeAutomated(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	SendGoHomeCommandTo(vars["name"])
-	if err := json.NewEncoder(w).Encode(struct {
-		Success bool `json:"success"`
-	}{true}); err != nil {
-		failOnError(err, "Unable to load the message")
+	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 }
@@ -315,7 +313,7 @@ func GetDroneFlyingStatus(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	if err := json.NewEncoder(w).Encode(GetFlyingStatus(vars["name"])); err != nil {
-		failOnError(err, "Unable to load the message")
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 
@@ -324,7 +322,7 @@ func GetDroneFlyingStatus(w http.ResponseWriter, r *http.Request) {
 // GetDronesFlyingStatus Récupère les états de tous les drones
 func GetDronesFlyingStatus(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(FlyingStatuses); err != nil {
-		failOnError(err, "Unable to load the message")
+		failOnError(err, loadErrorMsg)
 		panic(err)
 	}
 

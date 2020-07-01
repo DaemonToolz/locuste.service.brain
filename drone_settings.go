@@ -20,8 +20,8 @@ func initDroneSettings() {
 			HorizontalSpeed:     0.20, // m/s
 			MaxRotationSpeed:    0.20, // en degrés/s
 
-			MaxTilt:     0, // 5% - sera utilisé lorsque l'on intégrera la version PCMD ~ utilisateur avancé
-			MaxThrottle: 0, // 5%
+			MaxTilt:     5, // 5% - sera utilisé lorsque l'on intégrera la version PCMD ~ utilisateur avancé
+			MaxThrottle: 5, // 5%
 			MaxYaw:      5, // 5%
 		})
 	}

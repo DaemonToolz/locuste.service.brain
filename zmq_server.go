@@ -34,7 +34,6 @@ func CreateZMQDealer(request IdentificationRequest) {
 
 	if _, ok := commandChannels[request.Name]; ok {
 		zmqCmdMutex.Lock()
-
 		close(commandChannels[request.Name])
 		delete(commandChannels, request.Name)
 		zmqCmdMutex.Unlock()
@@ -45,10 +44,12 @@ func CreateZMQDealer(request IdentificationRequest) {
 	if err != nil {
 		failOnError(err, "CreateZMQDealer")
 		delete(zmqDealers, request.Name)
+		AddOrUpdateExtCompStatus(request.Name, OrderStream, false)
 	} else {
 		zmqCmdMutex.Lock()
 		commandChannels[request.Name] = make(chan interface{})
 		zmqCmdMutex.Unlock()
+		AddOrUpdateExtCompStatus(request.Name, OrderStream, true)
 		go func(name string) { messageListenerLoop(name) }(request.Name)
 	}
 
@@ -75,6 +76,8 @@ func SendZMQMessage(name string, payload interface{}) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Println(r)
+			AddOrUpdateExtCompStatus(name, OrderStream, false)
+			DestroyZMQDealer(name) // On détruit tout, car un bug s'est présenté
 		}
 	}()
 
@@ -110,7 +113,7 @@ func DestroyZMQRouters() {
 
 // DestroyZMQDealer Destruction d'un dealer CZMQ
 func DestroyZMQDealer(name string) {
-
+	AddOrUpdateExtCompStatus(name, OrderStream, false)
 	zmqAccessMutex.Lock()
 	defer zmqAccessMutex.Unlock()
 	if _, ok := zmqDealers[name]; ok {
@@ -119,4 +122,13 @@ func DestroyZMQDealer(name string) {
 		}
 		delete(zmqDealers, name)
 	}
+
+}
+
+// StartZMQServer Démarre un serveur ZMQ
+func StartZMQServer(name string, port int) {
+	CreateZMQDealer(IdentificationRequest{
+		Name:    name,
+		ZMQPort: port,
+	})
 }
