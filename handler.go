@@ -161,7 +161,7 @@ func RestartZMQServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	zmqPort := 7300 + conv
-	StartZMQServer(name, zmqPort)
+	StartZMQServer(name, zmqPort, false)
 	if err := json.NewEncoder(w).Encode(successStructResponse); err != nil {
 		failOnError(err, loadErrorMsg)
 		panic(err)

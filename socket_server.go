@@ -35,7 +35,11 @@ func initSocketServer() {
 		log.Printf("Channel %s identified as %s", c.Id(), request.Name)
 		c.Join(request.Name)
 		channelMapping[c.Id()] = request.Name // On garde ça pour la déconnexion
-		go CreateZMQDealer(request)
+		go CreateZMQDealer(ZMQIdentificationRequest{
+			Name:    request.Name,
+			Scope:   ZMQDrone,
+			ZMQPort: request.ZMQPort,
+		}, false)
 		go notifyRoom(NotifyAll, "identify", request)
 
 		startVideoServer(request.Name, request.VideoPort)
@@ -136,7 +140,7 @@ func initSocketServer() {
 			command := DefineCommand(pressed_key)
 			if command.Name != NoCommand {
 				// droneControlServer["shared"] | droneControlServer[pressed_key.DroneID]
-				go SendToZMQMessageChannel(pressed_key.DroneID, command)
+				go SendToZMQMessageChannelAuto(pressed_key.DroneID, command, false)
 			}
 		}
 
@@ -164,7 +168,7 @@ func initSocketServer() {
 			command := DefinePCMDCommand(joystickEvent)
 			if command.Name != NoCommand {
 				// droneControlServer["shared"] | droneControlServer[pressed_key.DroneID]
-				go SendToZMQMessageChannel(joystickEvent.DroneID, command)
+				go SendToZMQMessageChannelAuto(joystickEvent.DroneID, command, false)
 			}
 		}
 	})
@@ -174,7 +178,7 @@ func initSocketServer() {
 		log.Printf("Channel %s disconnected", c.Id())
 
 		if room, ok := channelMapping[c.Id()]; ok && (room != desktopOpRoom || room != mobileOpRoom) {
-			DestroyZMQDealer(room)
+			DestroyZMQDealerAuto(room, false)
 			go notifyRoom(NotifyAll, "relay_endpoint_disconnect", DroneIdentifier{
 				Name: channelMapping[c.Id()],
 			})
@@ -229,7 +233,7 @@ func StartWatcher() {
 // RedirectCommand Redirige la commande manuelle
 func RedirectCommand(command RemoteManualCommand) {
 	//server.BroadcastTo(command.Target, string(command.Command), "")
-	go SendToZMQMessageChannel(command.Target, command)
+	go SendToZMQMessageChannelAuto(command.Target, command, false)
 }
 
 // NotifyExternalCompChange Indique un changement dans un des modules externe
@@ -245,7 +249,7 @@ func NotifyExternalCompChange(droneName string) {
 func SendLastCoordinate(drone DroneFlightCoordinates) {
 	// coordinates.latitude,coordinates.longitude,self._drone_coordinates.altitude
 	if server != nil {
-		go SendToZMQMessageChannel(drone.DroneName, CreateAutomaticGoTo(&drone))
+		go SendToZMQMessageChannelAuto(drone.DroneName, CreateAutomaticGoTo(&drone), false)
 		go notifyRoom(NotifyAll, "add_on_schedule", drone)
 	}
 }
@@ -281,7 +285,7 @@ func SendFlyingStatusUpdate(input DroneSummarizedStatus) {
 // SendAutomaticCommand Envoi d'une commande automatique
 func SendAutomaticCommand(input PyAutomaticCommand) {
 	if server != nil {
-		go SendToZMQMessageChannel(input.Target, CreateAutomaticCommand(input))
+		go SendToZMQMessageChannelAuto(input.Target, CreateAutomaticCommand(input), false)
 	}
 }
 
