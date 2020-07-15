@@ -95,6 +95,17 @@ func messageListenerLoop(toWhom *map[string]*goczmq.Sock, commChan *map[string]c
 	}
 }
 
+func messageReceiverLoop(toWhom *map[string]*goczmq.Sock, commChan *map[string]chan interface{}, lock *sync.Mutex, name string, isInternal bool) {
+	for {
+		_, err := (*toWhom)[name].RecvMessage()
+		if err != nil {
+			failOnError(err, "Error in messageReceiverLoop")
+			DestroyZMQDealer(toWhom, lock, name, isInternal) // On détruit tout, car un bug s'est présenté
+		}
+
+	}
+}
+
 // SendToZMQMessageChannelAuto Envoi d'une commande au canal de synchronization dédié à ZMQ (moins de paramètres)
 func SendToZMQMessageChannelAuto(name string, payload interface{}, internal bool) {
 
@@ -132,7 +143,7 @@ func SendZMQMessage(toWhom *map[string]*goczmq.Sock, lock *sync.Mutex, name stri
 	if _, ok := (*toWhom)[name]; ok {
 		jPayload, err := json.Marshal(&payload)
 		if err != nil {
-			failOnError(err, fmt.Sprintf("SendMessSendZMQMessageage:%s", name))
+			failOnError(err, fmt.Sprintf("SendMessSendZMQMessaga:%s", name))
 			return
 		}
 
@@ -140,7 +151,7 @@ func SendZMQMessage(toWhom *map[string]*goczmq.Sock, lock *sync.Mutex, name stri
 		_, erro := (*toWhom)[name].Write([]byte(jPayload))
 		lock.Unlock()
 		if erro != nil {
-			failOnError(erro, fmt.Sprintf("SendMessSendZMQMessageage:%s", name))
+			failOnError(erro, fmt.Sprintf("SendMessSendZMQMessaga:%s", name))
 		}
 
 	}
