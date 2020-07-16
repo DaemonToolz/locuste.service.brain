@@ -1,7 +1,30 @@
 package main
 
+import (
+	"fmt"
+	"sync"
+)
+
 // ZMQDefinedFunc Noms des fonctions échangées Router <=> Dealer
 type ZMQDefinedFunc string
+
+// ZMQMessage Message envoyé entre les Dealers ZMQ
+type ZMQMessage struct {
+	Function ZMQDefinedFunc `json:"function"`
+	Params   []interface{}  `json:"params"`
+}
+
+// ZMQComponents Composants enregistrés (Avec ProcessID)
+var ZMQComponents map[Component]int
+var zmqProcessMutex sync.Mutex
+
+// MapBoundaries Limite de la carte
+var MapBoundaries Boundaries
+
+func init() {
+	ZMQComponents = make(map[Component]int)
+	MapBoundaries = Boundaries{}
+}
 
 // #region Function Host
 const (
@@ -15,8 +38,6 @@ const (
 	ZFNSendCoordinates ZMQDefinedFunc = "SendCoordinates"
 	// ZFNDefineTarget Anciennement DefineTarget (RPC)
 	ZFNDefineTarget ZMQDefinedFunc = "DefineTarget"
-	// ZFNDefineEdge Anciennement DefineEdge (RPC)
-	ZFNDefineEdge ZMQDefinedFunc = "DefineEdge"
 	// ZFNOnUpdateAutopilot Anciennement UpdateAutopilot (RPC)
 	ZFNOnUpdateAutopilot ZMQDefinedFunc = "OnUpdateAutopilot"
 	// ZFNOnFlyingStatusUpdate Anciennement OnFlyingStatusUpdate (RPC)
@@ -26,6 +47,139 @@ const (
 	// ZFNSendCommand Anciennement SendCommand (RPC)
 	ZFNSendCommand ZMQDefinedFunc = "SendCommand"
 )
+
+func addOrUpdateZMQProcess(cpt Component, pid int) {
+	zmqProcessMutex.Lock()
+	defer zmqProcessMutex.Unlock()
+	ZMQComponents[cpt] = pid
+}
+
+func deleteZMQProcess(cpt Component) {
+	zmqProcessMutex.Lock()
+	defer zmqProcessMutex.Unlock()
+	delete(ZMQComponents, cpt)
+}
+
+// ZRegister Enregistrer le processus ZMQ
+func ZRegister(params *[]interface{}) {
+	if params != nil && len(*params) > 0 {
+		if input, ok := (*params)[0].(Args); len(*params) > 0 && ok {
+			addOrUpdateZMQProcess(input.Component, input.PId)
+			trace(fmt.Sprintf("%s : %s", callSuccess, string(input.Component)))
+			AddOrUpdateStatus(input.Component, true)
+		} else {
+			trace(callFailure)
+		}
+	} else {
+		trace(callFailure)
+	}
+}
+
+// ZRDisconnect Désenregistre le process associé à une file ZMQ
+func ZRDisconnect(params *[]interface{}) {
+	if params != nil && len(*params) > 0 {
+		if input, ok := (*params)[0].(Args); ok {
+			deleteZMQProcess(input.Component)
+			trace(fmt.Sprintf("%s : %s", callSuccess, string(input.Component)))
+			AddOrUpdateStatus(input.Component, false)
+		} else {
+			trace(callFailure)
+		}
+	} else {
+		trace(callFailure)
+	}
+}
+
+// ZDefineBoundaries Enregistre les limites de la carte
+func ZDefineBoundaries(params *[]interface{}) {
+	if params != nil && len(*params) > 0 {
+		if input, ok := (*params)[0].(Boundaries); ok {
+			MapBoundaries = input
+			trace(callSuccess)
+		} else {
+			trace(callFailure)
+		}
+	} else {
+		trace(callFailure)
+	}
+}
+
+// ZSendCoordinates Partage les dernières coordonnées avec les clients Angular / Mobile
+func ZSendCoordinates(params *[]interface{}) {
+	if params != nil && len(*params) > 0 {
+		if input, ok := (*params)[0].(DroneFlightCoordinates); ok {
+			go SendLastCoordinate(input)
+			trace(callSuccess)
+		} else {
+			trace(callFailure)
+		}
+	} else {
+		trace(callFailure)
+	}
+}
+
+// ZDefineTarget Partage les coordonnées cibles avec les clients Angular / Mobile
+func ZDefineTarget(params *[]interface{}) {
+	if params != nil && len(*params) > 0 {
+		if input, ok := (*params)[0].(FlightCoordinate); len(*params) > 0 && ok {
+			go SendTargetCoordinates(input)
+			trace(callSuccess)
+		} else {
+			trace(callFailure)
+		}
+	} else {
+		trace(callFailure)
+	}
+}
+
+// ZUpdateAutopilot Mise à jour du pilote auto
+func ZUpdateAutopilot(params *[]interface{}) {
+	if params != nil && len(*params) > 0 {
+		if input, ok := (*params)[0].(SchedulerSummarizedData); len(*params) > 0 && ok {
+			AddOrUpdateAutopilotStatus(input)
+			go SendAutopilotUpdate(input)
+			trace(callSuccess)
+		} else {
+			trace(callFailure)
+		}
+	} else {
+		trace(callFailure)
+	}
+}
+
+// ZOnFlyingStatusUpdate Réception des nouvelles infos de vol
+func ZOnFlyingStatusUpdate(params *[]interface{}) {
+	if params != nil && len(*params) > 0 {
+		if input, ok := (*params)[0].(DroneSummarizedStatus); len(*params) > 0 && ok {
+			AddOrUpdateFlyingStatus(input)
+			go SendFlyingStatusUpdate(input)
+			trace(callSuccess)
+		} else {
+			trace(callFailure)
+		}
+	} else {
+		trace(callFailure)
+	}
+}
+
+// ZServerShutdown Indicateur d'arrêt du endpoint / service ZMQ distant
+func ZServerShutdown(params *[]interface{}) {
+	AddOrUpdateStatus(SchedulerRPCServer, false)
+}
+
+// ZSendCommand Transmission d'une commande remontée par le service OSM
+func ZSendCommand(params *[]interface{}) {
+	if params != nil && len(*params) > 0 {
+		if input, ok := (*params)[0].(PyAutomaticCommand); len(*params) > 0 && ok {
+			go SendAutomaticCommand(input)
+			trace(callSuccess)
+		} else {
+			trace(callFailure)
+		}
+	} else {
+		trace(callFailure)
+	}
+}
 
 // #endregion Function Host
 
@@ -37,89 +191,51 @@ const (
 	ZFNNotifyScheduler ZMQDefinedFunc = "NotifyScheduler"
 	// ZFNUpdateAutopilot Anciennement UpdateAutopilot (RPC)
 	ZFNUpdateAutopilot ZMQDefinedFunc = "UpdateAutopilot"
+	// ZFNOnHomeChanged Anciennement OnHomeChanged (RPC)
+	ZFNOnHomeChanged ZMQDefinedFunc = "OnHomeChanged"
+	// ZFNFetchBoundaries Anciennement FetchBoundaries (RPC)
+	ZFNFetchBoundaries ZMQDefinedFunc = "FetchBoundaries"
+	// ZFNUpdateTarget Anciennement UpdateTarget (RPC)
+	ZFNUpdateTarget ZMQDefinedFunc = "UpdateTarget"
+	// ZFNUpdateFlyingStatus Anciennement UpdateFlyingStatus (RPC)
+	ZFNUpdateFlyingStatus ZMQDefinedFunc = "UpdateFlyingStatus"
+	// ZFNSendGoHomeCommandTo Anciennement SendGoHomeCommandTo (RPC)
+	ZFNSendGoHomeCommandTo ZMQDefinedFunc = "SendGoHomeCommandTo"
+	// ZFNSendTakeoffCommandTo Anciennement SendTakeoffCommandTo (RPC)
+	ZFNSendTakeoffCommandTo ZMQDefinedFunc = "SendTakeoffCommandTo"
+
+	// Reply sections
+
+	// ZFNRequestStatusReply Fonction réponse de RequestStatuses
+	ZFNRequestStatusReply ZMQDefinedFunc = "RequestStatusesReply"
 )
 
+// ZRequestStatuses Demande d'envoi des derniers status
+func ZRequestStatuses() {
+
+}
+
+// ZRequestStatusesReply  Réception des derniers status
+func ZRequestStatusesReply(params *[]interface{}) {
+	if params != nil && len(*params) > 0 {
+		if input, ok := (*params)[0].(map[Component]bool); len(*params) > 0 && ok {
+			lastStatuses = input
+			trace(callSuccess)
+		} else {
+			trace(callFailure)
+		}
+	} else {
+		trace(callFailure)
+	}
+}
+
 // #endregion Function Client
-
-// ZMQMessage Message envoyé entre les Dealers ZMQ
-type ZMQMessage struct {
-	Function ZMQDefinedFunc `json:"function"`
-	Params   []interface{}  `json:"params"`
-}
-
-/*
-
-
-// Register Enregistre un module qui se connecte à l'unité de contrôle
-func (t *RPCRegistry) Register(args *Args, _ *struct{}) error {
-	t.RPCComponents[args.Component] = args.PId
-	log.Println("Processus RPC ajouté ", string(args.Component))
-	AddOrUpdateStatus(args.Component, true)
-	return nil
-}
-
-// Disconnect Indique qu'un module s'est déconnecté
-func (t *RPCRegistry) Disconnect(args *Args, _ *struct{}) error {
-	delete(t.RPCComponents, args.Component)
-	log.Println("Processus RPC stoppé ", string(args.Component))
-	AddOrUpdateStatus(args.Component, false)
-	return nil
-}
-
-// DefineBoundaries Définir les limites de la carte
-func (t *RPCRegistry) DefineBoundaries(args *Boundaries, _ *struct{}) error {
-	t.MapBoundaries = *args
-	return nil
-}
-
-// SendCoordinates Envoi des coordonnées au serveur SocketIO
-func (*RPCRegistry) SendCoordinates(args *DroneFlightCoordinates, _ *struct{}) error {
-	go SendLastCoordinate(*args)
-	return nil
-}
-
-// DefineTarget Mise à jour de la cible (déplacement)
-func (*RPCRegistry) DefineTarget(args *FlightCoordinate, _ *struct{}) error {
-	go SendTargetCoordinates(*args)
-	return nil
-}
-
-// DefineEdge Deprecated: Envoi des informations du graphe/ville définit dans le module locuste.service.osm
-func (*RPCRegistry) DefineEdge(args *FlightCoordinate, _ *struct{}) error {
-	go SendNodeLocation(*args)
-	return nil
-}
-
-// UpdateAutopilot Demande la mise à jour du pilote / ordonanceur d'un drone
-func (*RPCRegistry) UpdateAutopilot(args *SchedulerSummarizedData, _ *struct{}) error {
-	AddOrUpdateAutopilotStatus(*args)
-	go SendAutopilotUpdate(*args)
-	return nil
-}
-
-// OnFlyingStatusUpdate On a une mise à jour côté Scheduler
-func (*RPCRegistry) OnFlyingStatusUpdate(args *DroneSummarizedStatus, _ *struct{}) error {
-	AddOrUpdateFlyingStatus(*args)
-	go SendFlyingStatusUpdate(*args)
-	return nil
-}
-
-// ServerShutdown Arrêt du serveur RPC
-func (*RPCRegistry) ServerShutdown(_ *struct{}, _ *struct{}) error {
-	AddOrUpdateStatus(SchedulerRPCServer, false)
-	return nil
-}
-func (t *RPCRegistry) RPCSendCommand(command *PyAutomaticCommand, _ *struct{}) error {
-	go SendAutomaticCommand(*command)
-	return nil
-}
-*/
 
 /*
 
 
 // RequestStatuses Demande le statut des modules côté locuste.service.osm
-func RequestStatuses() {
+func () {
 	if client != nil {
 		client.Go("RPCRegistry.RequestStatuses", &RPCNullArg, &lastStatuses, nil)
 

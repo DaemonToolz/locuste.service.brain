@@ -5,10 +5,19 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"runtime"
 	"time"
 
 	"github.com/gorilla/mux"
 )
+
+// #region Pre-recorded messages
+const (
+	callFailure string = "Echec de l'appel"
+	callSuccess string = "Réussite de l'appel"
+)
+
+// #endregion Pre-recorded messages
 
 func initMiddleware(router *mux.Router) {
 
@@ -58,4 +67,12 @@ func failOnError(err error, msg string) {
 
 func printRequest(addr string) {
 	log.Printf("[ %s ] - Request from %s ", time.Now().Format(time.RFC3339), addr)
+}
+
+func trace(desc string) {
+	pc := make([]uintptr, 15)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
+	frame, _ := frames.Next()
+	log.Printf("%s - %s\n", frame.Function, desc)
 }
