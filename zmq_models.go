@@ -17,3 +17,11 @@ type ZMQIdentificationRequest struct {
 	Scope    ZMQScopeTarget `json:"scope"`
 	Internal bool           `json:"internal"`
 }
+
+// ZMQInternalSystems Liste des systèmes internes connus par défaut
+type ZMQInternalSystems string
+
+const (
+	// ZOSMService Service de planification des cartes
+	ZOSMService ZMQInternalSystems = "locuste.services.osm"
+)

@@ -46,6 +46,8 @@ const (
 	ZFNServerShutdown ZMQDefinedFunc = "ServerShutdown"
 	// ZFNSendCommand Anciennement SendCommand (RPC)
 	ZFNSendCommand ZMQDefinedFunc = "SendCommand"
+	// ZFNRequestStatusesReply Réponse des services OSM à ZFNRequestStatuses
+	ZFNRequestStatusesReply ZMQDefinedFunc = "RequestStatusesReply"
 )
 
 func addOrUpdateZMQProcess(cpt Component, pid int) {
@@ -132,8 +134,8 @@ func ZDefineTarget(params *[]interface{}) {
 	}
 }
 
-// ZUpdateAutopilot Mise à jour du pilote auto
-func ZUpdateAutopilot(params *[]interface{}) {
+// ZOnUpdateAutopilot Après Mise à jour du pilote auto
+func ZOnUpdateAutopilot(params *[]interface{}) {
 	if params != nil && len(*params) > 0 {
 		if input, ok := (*params)[0].(SchedulerSummarizedData); len(*params) > 0 && ok {
 			AddOrUpdateAutopilotStatus(input)
@@ -181,40 +183,6 @@ func ZSendCommand(params *[]interface{}) {
 	}
 }
 
-// #endregion Function Host
-
-// #region Function Client
-const (
-	// ZFNRequestStatuses Anciennement RequestStatuses (RPC)
-	ZFNRequestStatuses ZMQDefinedFunc = "RequestStatuses"
-	// ZFNNotifySchedulerAnciennement NotifyScheduler (RPC)
-	ZFNNotifyScheduler ZMQDefinedFunc = "NotifyScheduler"
-	// ZFNUpdateAutopilot Anciennement UpdateAutopilot (RPC)
-	ZFNUpdateAutopilot ZMQDefinedFunc = "UpdateAutopilot"
-	// ZFNOnHomeChanged Anciennement OnHomeChanged (RPC)
-	ZFNOnHomeChanged ZMQDefinedFunc = "OnHomeChanged"
-	// ZFNFetchBoundaries Anciennement FetchBoundaries (RPC)
-	ZFNFetchBoundaries ZMQDefinedFunc = "FetchBoundaries"
-	// ZFNUpdateTarget Anciennement UpdateTarget (RPC)
-	ZFNUpdateTarget ZMQDefinedFunc = "UpdateTarget"
-	// ZFNUpdateFlyingStatus Anciennement UpdateFlyingStatus (RPC)
-	ZFNUpdateFlyingStatus ZMQDefinedFunc = "UpdateFlyingStatus"
-	// ZFNSendGoHomeCommandTo Anciennement SendGoHomeCommandTo (RPC)
-	ZFNSendGoHomeCommandTo ZMQDefinedFunc = "SendGoHomeCommandTo"
-	// ZFNSendTakeoffCommandTo Anciennement SendTakeoffCommandTo (RPC)
-	ZFNSendTakeoffCommandTo ZMQDefinedFunc = "SendTakeoffCommandTo"
-
-	// Reply sections
-
-	// ZFNRequestStatusReply Fonction réponse de RequestStatuses
-	ZFNRequestStatusReply ZMQDefinedFunc = "RequestStatusesReply"
-)
-
-// ZRequestStatuses Demande d'envoi des derniers status
-func ZRequestStatuses() {
-
-}
-
 // ZRequestStatusesReply  Réception des derniers status
 func ZRequestStatusesReply(params *[]interface{}) {
 	if params != nil && len(*params) > 0 {
@@ -229,72 +197,105 @@ func ZRequestStatusesReply(params *[]interface{}) {
 	}
 }
 
+// #endregion Function Host
+
+// #region Function Client
+const (
+	// ZFNRequestStatuses Anciennement RequestStatuses (RPC)
+	ZFNRequestStatuses ZMQDefinedFunc = "RequestStatuses"
+	// ZFNNotifyScheduler Anciennement OnCommandSuccess (RPC)
+	ZFNNotifyScheduler ZMQDefinedFunc = "OnCommandSuccess"
+	// ZFNUpdateAutopilot Anciennement UpdateAutopilot (RPC)
+	ZFNUpdateAutopilot ZMQDefinedFunc = "UpdateAutopilot"
+	// ZFNOnHomeChanged Anciennement OnHomeChanged (RPC)
+	ZFNOnHomeChanged ZMQDefinedFunc = "OnHomeChanged"
+	// ZFNFetchBoundaries Anciennement GetBoundaries (RPC)
+	ZFNFetchBoundaries ZMQDefinedFunc = "GetBoundaries"
+	// ZFNUpdateTarget Anciennement UpdateTarget (RPC)
+	ZFNUpdateTarget ZMQDefinedFunc = "UpdateTarget"
+	// ZFNUpdateFlyingStatus Anciennement FlyingStatusUpdate (RPC)
+	ZFNUpdateFlyingStatus ZMQDefinedFunc = "FlyingStatusUpdate"
+	// ZFNSendGoHomeCommandTo Anciennement SendGoHomeCommandTo (RPC)
+	ZFNSendGoHomeCommandTo ZMQDefinedFunc = "SendGoHomeCommandTo"
+	// ZFNSendTakeoffCommandTo Anciennement SendTakeoffCommandTo (RPC)
+	ZFNSendTakeoffCommandTo ZMQDefinedFunc = "SendTakeoffCommandTo"
+
+	// Reply sections - From client
+
+	// ZFNRequestStatusReply Fonction réponse de RequestStatuses
+	ZFNRequestStatusReply ZMQDefinedFunc = "RequestStatusesReply"
+)
+
+// ZRequestStatuses Demande d'envoi des derniers status
+func ZRequestStatuses() *ZMQMessage {
+	return &ZMQMessage{
+		Function: ZFNRequestStatuses,
+		Params:   make([]interface{}, 0),
+	}
+}
+
+// ZNotifyScheduler Notifier le séquenceur OSM
+func ZNotifyScheduler(input CommandIdentifier) *ZMQMessage {
+	return &ZMQMessage{
+		Function: ZFNNotifyScheduler,
+		Params:   []interface{}{input},
+	}
+}
+
+// ZUpdateAutopilot Demande de MàJ forcée de l'autopilot
+func ZUpdateAutopilot(input SchedulerSummarizedData) *ZMQMessage {
+	return &ZMQMessage{
+		Function: ZFNNotifyScheduler,
+		Params:   []interface{}{input},
+	}
+}
+
+// ZOnHomeChanged MàJ du point de décollage
+func ZOnHomeChanged(input FlightCoordinate) *ZMQMessage {
+	return &ZMQMessage{
+		Function: ZFNOnHomeChanged,
+		Params:   []interface{}{input},
+	}
+}
+
+// ZFetchBoundaries Demande les limites de la carte
+func ZFetchBoundaries() *ZMQMessage {
+	return &ZMQMessage{
+		Function: ZFNFetchBoundaries,
+		Params:   []interface{}{},
+	}
+}
+
+// ZUpdateTarget Envoi des instructions pour recalculer la position sur la route
+func ZUpdateTarget(input FlightCoordinate) *ZMQMessage {
+	return &ZMQMessage{
+		Function: ZFNUpdateTarget,
+		Params:   []interface{}{input},
+	}
+}
+
+// ZUpdateFlyingStatus mise à jour de l'état du drone (en vol)
+func ZUpdateFlyingStatus(input DroneFlyingStatusMessage) *ZMQMessage {
+	return &ZMQMessage{
+		Function: ZFNUpdateFlyingStatus,
+		Params:   []interface{}{input},
+	}
+}
+
+// ZSendGoHomeCommandTo Demander une commande "atterrissage" au drone nommé
+func ZSendGoHomeCommandTo(input string) *ZMQMessage {
+	return &ZMQMessage{
+		Function: ZFNSendGoHomeCommandTo,
+		Params:   []interface{}{input},
+	}
+}
+
+// ZSendTakeoffCommandTo Demander une commande "décollage" au drone nommé
+func ZSendTakeoffCommandTo(input string) *ZMQMessage {
+	return &ZMQMessage{
+		Function: ZFNSendTakeoffCommandTo,
+		Params:   []interface{}{input},
+	}
+}
+
 // #endregion Function Client
-
-/*
-
-
-// RequestStatuses Demande le statut des modules côté locuste.service.osm
-func () {
-	if client != nil {
-		client.Go("RPCRegistry.RequestStatuses", &RPCNullArg, &lastStatuses, nil)
-
-	}
-}
-
-// NotifyScheduler Notification de l'ordonanceur
-func NotifyScheduler(data CommandIdentifier) {
-	if client != nil {
-		client.Go("RPCRegistry.OnCommandSuccess", &data, nil, nil)
-	}
-}
-
-// UpdateAutopilot Mise à jour d'un ordonanceur de vol
-func UpdateAutopilot(input SchedulerSummarizedData) {
-	if client != nil && input.DroneName != "" {
-		client.Go("RPCRegistry.UpdateAutopilot", &input, &RPCNullArg, nil)
-	}
-}
-
-// OnHomeChanged Dès le décollage
-func OnHomeChanged(output FlightCoordinate) {
-	if client != nil {
-		client.Go("RPCRegistry.OnHomeChanged", &output, &RPCNullArg, nil)
-	}
-}
-
-// FetchBoundaries Récupère les limites de la carte
-func FetchBoundaries() {
-	if client != nil { // && flightSchedulerRPC.MapBoundaries == (Boundaries{}) {
-		client.Call("RPCRegistry.GetBoundaries", &RPCNullArg, &flightSchedulerRPC.MapBoundaries)
-	}
-}
-
-// UpdateTarget Envoi des instructions pour recalculer la position sur la route
-func UpdateTarget(input FlightCoordinate) {
-	if client != nil && input != (FlightCoordinate{}) {
-		client.Go("RPCRegistry.UpdateTarget", &input, &RPCNullArg, nil)
-	}
-}
-
-// UpdateFlyingStatus mise à jour de l'état du drone (en vol)
-func UpdateFlyingStatus(data DroneFlyingStatusMessage) {
-	if client != nil {
-		client.Go("RPCRegistry.FlyingStatusUpdate", &data, &RPCNullArg, nil)
-	}
-}
-
-// SendGoHomeCommandTo Demander une commande "atterrissage" au drone nommé
-func SendGoHomeCommandTo(name string) {
-	if client != nil {
-		client.Go("RPCRegistry.SendGoHomeCommandTo", &name, &RPCNullArg, nil)
-	}
-}
-
-// SendTakeoffCommandTo Demander une commande "décollage" au drone nommé
-func SendTakeoffCommandTo(name string) {
-	if client != nil {
-		client.Go("RPCRegistry.SendTakeoffCommandTo", &name, &RPCNullArg, nil)
-	}
-}
-*/

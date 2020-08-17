@@ -85,8 +85,8 @@ func openConnection() *rpc.Client {
 // RequestStatuses Demande le statut des modules côté locuste.service.osm
 func RequestStatuses() {
 	if client != nil {
+		SendToZMQMessageChannelAuto(string(ZOSMService), ZRequestStatuses(), true)
 		client.Go("RPCRegistry.RequestStatuses", &RPCNullArg, &lastStatuses, nil)
-
 	}
 }
 
@@ -102,6 +102,7 @@ func Unregister() {
 // NotifyScheduler Notification de l'ordonanceur
 func NotifyScheduler(data CommandIdentifier) {
 	if client != nil {
+		SendToZMQMessageChannelAuto(string(ZOSMService), ZNotifyScheduler(data), true)
 		client.Go("RPCRegistry.OnCommandSuccess", &data, nil, nil)
 	}
 }
@@ -109,6 +110,7 @@ func NotifyScheduler(data CommandIdentifier) {
 // UpdateAutopilot Mise à jour d'un ordonanceur de vol
 func UpdateAutopilot(input SchedulerSummarizedData) {
 	if client != nil && input.DroneName != "" {
+		SendToZMQMessageChannelAuto(string(ZOSMService), ZUpdateAutopilot(input), true)
 		client.Go("RPCRegistry.UpdateAutopilot", &input, &RPCNullArg, nil)
 	}
 }
@@ -116,6 +118,7 @@ func UpdateAutopilot(input SchedulerSummarizedData) {
 // OnHomeChanged Dès le décollage
 func OnHomeChanged(output FlightCoordinate) {
 	if client != nil {
+		SendToZMQMessageChannelAuto(string(ZOSMService), ZOnHomeChanged(output), true)
 		client.Go("RPCRegistry.OnHomeChanged", &output, &RPCNullArg, nil)
 	}
 }
@@ -123,6 +126,7 @@ func OnHomeChanged(output FlightCoordinate) {
 // FetchBoundaries Récupère les limites de la carte
 func FetchBoundaries() {
 	if client != nil { // && flightSchedulerRPC.MapBoundaries == (Boundaries{}) {
+		SendToZMQMessageChannelAuto(string(ZOSMService), ZFetchBoundaries(), true)
 		client.Call("RPCRegistry.GetBoundaries", &RPCNullArg, &flightSchedulerRPC.MapBoundaries)
 	}
 }
@@ -130,6 +134,7 @@ func FetchBoundaries() {
 // UpdateTarget Envoi des instructions pour recalculer la position sur la route
 func UpdateTarget(input FlightCoordinate) {
 	if client != nil && input != (FlightCoordinate{}) {
+		SendToZMQMessageChannelAuto(string(ZOSMService), ZUpdateTarget(input), true)
 		client.Go("RPCRegistry.UpdateTarget", &input, &RPCNullArg, nil)
 	}
 }
@@ -137,6 +142,7 @@ func UpdateTarget(input FlightCoordinate) {
 // UpdateFlyingStatus mise à jour de l'état du drone (en vol)
 func UpdateFlyingStatus(data DroneFlyingStatusMessage) {
 	if client != nil {
+		SendToZMQMessageChannelAuto(string(ZOSMService), ZUpdateFlyingStatus(data), true)
 		client.Go("RPCRegistry.FlyingStatusUpdate", &data, &RPCNullArg, nil)
 	}
 }
@@ -144,6 +150,7 @@ func UpdateFlyingStatus(data DroneFlyingStatusMessage) {
 // SendGoHomeCommandTo Demander une commande "atterrissage" au drone nommé
 func SendGoHomeCommandTo(name string) {
 	if client != nil {
+		SendToZMQMessageChannelAuto(string(ZOSMService), ZSendGoHomeCommandTo(name), true)
 		client.Go("RPCRegistry.SendGoHomeCommandTo", &name, &RPCNullArg, nil)
 	}
 }
@@ -151,6 +158,7 @@ func SendGoHomeCommandTo(name string) {
 // SendTakeoffCommandTo Demander une commande "décollage" au drone nommé
 func SendTakeoffCommandTo(name string) {
 	if client != nil {
+		SendToZMQMessageChannelAuto(string(ZOSMService), ZSendTakeoffCommandTo(name), true)
 		client.Go("RPCRegistry.SendTakeoffCommandTo", &name, &RPCNullArg, nil)
 	}
 }

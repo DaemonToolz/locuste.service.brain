@@ -143,7 +143,7 @@ func SendZMQMessage(toWhom *map[string]*goczmq.Sock, lock *sync.Mutex, name stri
 	if _, ok := (*toWhom)[name]; ok {
 		jPayload, err := json.Marshal(&payload)
 		if err != nil {
-			failOnError(err, fmt.Sprintf("SendMessSendZMQMessaga:%s", name))
+			failOnError(err, fmt.Sprintf("SendZMQMessage:%s", name))
 			return
 		}
 
@@ -151,7 +151,7 @@ func SendZMQMessage(toWhom *map[string]*goczmq.Sock, lock *sync.Mutex, name stri
 		_, erro := (*toWhom)[name].Write([]byte(jPayload))
 		lock.Unlock()
 		if erro != nil {
-			failOnError(erro, fmt.Sprintf("SendMessSendZMQMessaga:%s", name))
+			failOnError(erro, fmt.Sprintf("SendZMQMessage:%s", name))
 		}
 
 	}
