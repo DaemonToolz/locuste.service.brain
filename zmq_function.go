@@ -5,25 +5,51 @@ import (
 	"sync"
 )
 
-// ZMQDefinedFunc Noms des fonctions échangées Router <=> Dealer
-type ZMQDefinedFunc string
-
-// ZMQMessage Message envoyé entre les Dealers ZMQ
-type ZMQMessage struct {
-	Function ZMQDefinedFunc `json:"function"`
-	Params   []interface{}  `json:"params"`
-}
-
 // ZMQComponents Composants enregistrés (Avec ProcessID)
 var ZMQComponents map[Component]int
 var zmqProcessMutex sync.Mutex
+
+var zmqServerMapMutex sync.Mutex
+var zmqServerMap map[ZMQDefinedFunc]interface{}
 
 // MapBoundaries Limite de la carte
 var MapBoundaries Boundaries
 
 func init() {
 	ZMQComponents = make(map[Component]int)
+	zmqServerMap := make(map[ZMQDefinedFunc]interface{})
 	MapBoundaries = Boundaries{}
+
+	zmqServerMap[ZFNRegister] = ZRegister
+	zmqServerMap[ZFNDisconnect] = ZDisconnect
+	zmqServerMap[ZFNDefineBoundaries] = ZDefineBoundaries
+	zmqServerMap[ZFNSendCoordinates] = ZSendCoordinates
+	zmqServerMap[ZFNDefineTarget] = ZDefineTarget
+	zmqServerMap[ZFNOnUpdateAutopilot] = ZOnUpdateAutopilot
+	zmqServerMap[ZFNOnFlyingStatusUpdate] = ZOnFlyingStatusUpdate
+	zmqServerMap[ZFNSendCommand] = ZSendCommand
+	zmqServerMap[ZFNRequestStatusesReply] = ZRequestStatusesReply
+	//funcMapper["func"].(func(*os.File))(output)
+}
+
+func callMappedZMQFunc(msg *ZMQMessage) {
+	if msg != nil {
+		if _, ok := zmqServerMap[msg.Function]; !ok {
+			trace(fmt.Sprintf("%s : %s", callFailure, "Méthode inconnue"))
+		}
+
+		zmqServerMapMutex.Lock()
+		defer func() {
+			zmqServerMapMutex.Unlock()
+			if r := recover(); r != nil {
+				trace(fmt.Sprintf("%s : %s", callFailure, r))
+			}
+		}()
+
+		zmqServerMap[msg.Function].(func(*[]interface{}))(&msg.Params)
+	} else {
+		trace(fmt.Sprintf("%s : %s", callFailure, "Message reçu malformé"))
+	}
 }
 
 // #region Function Host
@@ -77,8 +103,8 @@ func ZRegister(params *[]interface{}) {
 	}
 }
 
-// ZRDisconnect Désenregistre le process associé à une file ZMQ
-func ZRDisconnect(params *[]interface{}) {
+// ZDisconnect Désenregistre le process associé à une file ZMQ
+func ZDisconnect(params *[]interface{}) {
 	if params != nil && len(*params) > 0 {
 		if input, ok := (*params)[0].(Args); ok {
 			deleteZMQProcess(input.Component)

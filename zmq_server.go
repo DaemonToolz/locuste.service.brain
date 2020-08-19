@@ -31,6 +31,12 @@ func initZMQ() {
 
 	droneCmdChannels = make(map[string]chan interface{})
 	moduleCmdChannels = make(map[string]chan interface{})
+
+	CreateZMQDealer(ZMQIdentificationRequest{
+		Name:    string(ZOSMService),
+		Scope:   ZMQInternal,
+		ZMQPort: appConfig.OSMZmqPort,
+	}, true)
 }
 
 func createTgtZMQDealer(who *map[string]*goczmq.Sock, how *map[string]chan interface{}, modMutex *sync.Mutex, cmdMutex *sync.Mutex, request *ZMQIdentificationRequest, isExt bool) {
@@ -97,12 +103,20 @@ func messageListenerLoop(toWhom *map[string]*goczmq.Sock, commChan *map[string]c
 
 func messageReceiverLoop(toWhom *map[string]*goczmq.Sock, commChan *map[string]chan interface{}, lock *sync.Mutex, name string, isInternal bool) {
 	for {
-		_, err := (*toWhom)[name].RecvMessage()
+		msg, err := (*toWhom)[name].RecvMessage()
+		if err != nil {
+			failOnError(err, "Error in messageReceiverLoop")
+			DestroyZMQDealer(toWhom, lock, name, isInternal) // On détruit tout, car un bug s'est présenté
+		}
+		var payload ZMQMessage
+		err = json.Unmarshal(msg[0], payload)
+
 		if err != nil {
 			failOnError(err, "Error in messageReceiverLoop")
 			DestroyZMQDealer(toWhom, lock, name, isInternal) // On détruit tout, car un bug s'est présenté
 		}
 
+		callMappedZMQFunc(&payload)
 	}
 }
 

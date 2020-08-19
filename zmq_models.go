@@ -25,3 +25,12 @@ const (
 	// ZOSMService Service de planification des cartes
 	ZOSMService ZMQInternalSystems = "locuste.services.osm"
 )
+
+// ZMQDefinedFunc Noms des fonctions échangées Router <=> Dealer
+type ZMQDefinedFunc string
+
+// ZMQMessage Message envoyé entre les Dealers ZMQ
+type ZMQMessage struct {
+	Function ZMQDefinedFunc `json:"function"`
+	Params   []interface{}  `json:"params"`
+}

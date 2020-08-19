@@ -17,8 +17,8 @@ type Config struct {
 	DroneSocketPort int    `json:"dr_socket_port"`
 	RPCPort         int    `json:"rpc_port"`
 	RtspPort        int    `json:"rtsp_port"`
-
-	SchedulerPort int `json:"scheduler_port"`
+	OSMZmqPort      int    `json:"osm_zmq_port"`
+	SchedulerPort   int    `json:"scheduler_port"`
 }
 
 // Drones Information tirée du fichier de configuration des drones (liste de drones)

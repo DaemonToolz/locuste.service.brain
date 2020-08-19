@@ -2,7 +2,9 @@
     "host":HOST,
     "port":PORT_HTTP,
     "socket_port":PORT_WEB_SOCKET,
+    "dr_socket_port": PORT_SOCKET_DRONE
     "rpc_port":PORT_RPC_SERVER,
     "rtsp_port":PORT_RTSP_FLOW,
-    "scheduler_port":PORT_SCHEDULER_RPC
+    "scheduler_port":PORT_SCHEDULER_RPC,
+    "osm_zmq_port": OSM_ZMQ_PORT
 }
