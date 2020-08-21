@@ -9,6 +9,20 @@ import (
 	"github.com/zeromq/goczmq"
 )
 
+// "Negotiator" Evolution
+// NOTE : RedirectRouter will allow the following scheme
+// Client To Brain
+// Client Dealer connects Brain Router
+// Brain Router creates Brain Client Dealer
+// Brain Router informs Client Dealer
+// Client Dealer disconnects Brain Router
+// Client Dealer connects Brain Client Dealer
+
+// #region Section ROUTER
+var redirectRouter *goczmq.Sock
+
+// #endregion Section ROUTER
+
 // #region Section DRONES
 var zmqDroneDealers map[string]*goczmq.Sock
 var zmqDroneAccessMutex sync.Mutex
